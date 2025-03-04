@@ -116,6 +116,13 @@ def get_rag_agent() -> Agent:
         markdown=True,
     )
 
+def format_url_display(url, max_length=50):
+    """Format URL for display by shortening if needed."""
+    if len(url) > max_length:
+        # Keep the domain and truncate the path
+        domain = url.split('//')[-1].split('/')[0]
+        return f"{domain}/...{url[-20:]}"
+    return url
 
 # Main Application Flow
 # File/URL Upload Section
@@ -222,7 +229,8 @@ if prompt:
                     if search_links:
                         with st.expander("🔗 Search Source Links"):
                             for i, link in enumerate(search_links, 1):
-                                st.write(f"{i}. [{link}]({link})")
+                                display_link = format_url_display(link)
+                                st.write(f"{i}. [{display_link}]({link})")
             except Exception as e:
                 st.error(f"❌ Google search error: {str(e)}")
 
@@ -272,7 +280,8 @@ Rewritten Question: {rewritten_query}
                 elif search_links:
                     with st.expander("🔗 Web Search Sources"):
                         for i, link in enumerate(search_links, 1):
-                            st.write(f"{i}. [{link}]({link})")
+                            display_link = format_url_display(link)
+                            st.write(f"{i}. [{display_link}]({link})")
 
         except Exception as e:
             st.error(f"❌ Error generating response: {str(e)}")
