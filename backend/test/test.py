@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 import streamlit as st
 import google.generativeai as genai
 
-
 # Import shared functionality from embedder.py
 from embedder import (
     init_pinecone,
