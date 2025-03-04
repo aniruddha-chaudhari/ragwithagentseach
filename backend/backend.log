@@ -1,0 +1,506 @@
+2025-02-12 18:45:25,383 - INFO - Received paper for analysis: images.png
+2025-02-12 18:45:25,411 - INFO - File saved temporarily as: temp_images.png
+2025-02-12 18:45:25,417 - INFO - Starting document processing for file: temp_images.png
+2025-02-12 18:45:25,418 - INFO - Starting document preparation for file: temp_images.png
+2025-02-12 18:45:27,319 - INFO - File uploaded successfully
+2025-02-12 18:45:27,320 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 18:45:35,457 - INFO - AFC remote call 1 is done.
+2025-02-12 18:45:35,459 - INFO - Received initial AI response
+2025-02-12 18:45:35,459 - INFO - Starting document analysis
+2025-02-12 18:45:35,460 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 18:45:38,537 - INFO - AFC remote call 1 is done.
+2025-02-12 18:45:38,542 - INFO - Received structured response from AI
+2025-02-12 18:45:38,543 - INFO - Successfully parsed JSON response
+2025-02-12 18:45:38,543 - INFO - Processed data structure: marks=65, remarks=4, suggestions=7, errors=3
+2025-02-12 18:45:38,544 - INFO - Successfully created final response
+2025-02-12 18:45:38,545 - INFO - Document processing completed successfully
+2025-02-12 18:45:38,545 - INFO - Paper analysis completed
+2025-02-12 18:45:52,631 - INFO - Received chat request with message: hi'...
+2025-02-12 18:45:52,632 - INFO - Using chat ID: 1739366152.632044
+2025-02-12 18:45:52,632 - INFO - Creating new chat session for ID: 1739366152.632044
+2025-02-12 18:45:52,633 - INFO - Sending message to AI model
+2025-02-12 18:45:53,451 - INFO - Received response from AI model
+2025-02-12 18:45:53,460 - INFO - Chat history saved
+2025-02-12 18:46:00,124 - INFO - Received chat request with message: my name is aniruddha...
+2025-02-12 18:46:00,126 - INFO - Using chat ID: 1739366152.632044
+2025-02-12 18:46:00,127 - INFO - Sending message to AI model
+2025-02-12 18:46:00,479 - ERROR - API quota exceeded
+2025-02-12 18:46:43,015 - INFO - Received chat request with message: my name is aniruddha...
+2025-02-12 18:46:43,016 - INFO - Using chat ID: 1739366203.016123
+2025-02-12 18:46:43,017 - INFO - Creating new chat session for ID: 1739366203.016123
+2025-02-12 18:46:43,018 - INFO - Sending message to AI model
+2025-02-12 18:46:44,045 - INFO - Received response from AI model
+2025-02-12 18:46:44,048 - INFO - Chat history saved
+2025-02-12 18:46:50,379 - INFO - Received chat request with message: what is my name...
+2025-02-12 18:46:50,380 - INFO - Using chat ID: 1739366203.016123
+2025-02-12 18:46:50,380 - INFO - Sending message to AI model
+2025-02-12 18:46:51,017 - INFO - Received response from AI model
+2025-02-12 18:46:51,022 - INFO - Chat history saved
+2025-02-12 18:47:57,493 - INFO - Received paper for analysis: images.png
+2025-02-12 18:47:57,496 - INFO - File saved temporarily as: temp_images.png
+2025-02-12 18:47:57,496 - INFO - Starting document processing for file: temp_images.png
+2025-02-12 18:47:57,496 - INFO - Starting document preparation for file: temp_images.png
+2025-02-12 18:47:59,170 - INFO - File uploaded successfully
+2025-02-12 18:47:59,172 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 18:48:06,133 - INFO - AFC remote call 1 is done.
+2025-02-12 18:48:06,134 - INFO - Received initial AI response
+2025-02-12 18:48:06,136 - INFO - Starting document analysis
+2025-02-12 18:48:06,137 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 18:48:09,920 - INFO - AFC remote call 1 is done.
+2025-02-12 18:48:09,921 - INFO - Received structured response from AI
+2025-02-12 18:48:09,922 - INFO - Successfully parsed JSON response
+2025-02-12 18:48:09,923 - INFO - Processed data structure: marks=0, remarks=9, suggestions=3, errors=9
+2025-02-12 18:48:09,923 - INFO - Successfully created final response
+2025-02-12 18:48:09,924 - INFO - Document processing completed successfully
+2025-02-12 18:48:09,925 - INFO - Paper analysis completed
+2025-02-12 18:51:18,425 - INFO - Received document upload: images.png
+2025-02-12 18:51:18,426 - INFO - File saved temporarily as: temp_images.png
+2025-02-12 18:51:21,317 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 18:51:21,319 - INFO - AFC remote call 1 is done.
+2025-02-12 18:51:24,839 - INFO - Temporary file removed
+2025-02-12 18:51:24,840 - INFO - Document processed successfully
+2025-02-12 18:51:39,304 - INFO - Received chat request with message: what is image about...
+2025-02-12 18:51:39,304 - INFO - Using chat ID: 1739366499.304333
+2025-02-12 18:51:39,305 - INFO - Creating new chat session for ID: 1739366499.304333
+2025-02-12 18:51:39,305 - INFO - Sending message to AI model
+2025-02-12 18:51:42,353 - INFO - Received response from AI model
+2025-02-12 18:51:42,355 - INFO - Chat history saved
+2025-02-12 19:03:18,649 - INFO - Received chat request with message: hi...
+2025-02-12 19:03:18,650 - INFO - Using chat ID: 1739367198.650709
+2025-02-12 19:03:18,652 - INFO - Creating new chat session for ID: 1739367198.650709
+2025-02-12 19:03:18,652 - INFO - Sending message to AI model
+2025-02-12 19:03:19,498 - INFO - Received response from AI model
+2025-02-12 19:03:19,500 - INFO - Chat history saved
+2025-02-12 19:03:27,146 - INFO - Received document upload: images.png
+2025-02-12 19:03:27,178 - INFO - File saved temporarily as: temp_images.png
+2025-02-12 19:03:29,434 - INFO - File uploaded successfully to AI service
+2025-02-12 19:03:29,435 - INFO - Processing image file
+2025-02-12 19:03:29,436 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 19:03:29,437 - INFO - AFC remote call 1 is done.
+2025-02-12 19:03:34,383 - INFO - Document analysis completed
+2025-02-12 19:03:34,385 - INFO - Temporary file removed
+2025-02-12 19:03:34,386 - INFO - Document processed successfully
+2025-02-12 19:03:51,531 - INFO - Received chat request with message: what is the image about...
+2025-02-12 19:03:51,531 - INFO - Using chat ID: 1739367231.531168
+2025-02-12 19:03:51,531 - INFO - Creating new chat session for ID: 1739367231.531168
+2025-02-12 19:03:51,532 - INFO - Sending message to AI model
+2025-02-12 19:03:53,086 - INFO - Received response from AI model
+2025-02-12 19:03:53,117 - INFO - Chat history saved
+2025-02-12 19:08:10,696 - INFO - Received chat request with message: yo...
+2025-02-12 19:08:10,697 - INFO - Using chat ID: 1739367490.697204
+2025-02-12 19:08:10,698 - INFO - Creating new chat session for ID: 1739367490.697204
+2025-02-12 19:08:10,698 - INFO - Sending message to AI model
+2025-02-12 19:08:11,654 - INFO - Received response from AI model
+2025-02-12 19:08:11,660 - INFO - Chat history saved
+2025-02-12 19:08:18,914 - INFO - Received document upload: images.png with chat_id: None
+2025-02-12 19:08:18,916 - INFO - File saved temporarily as: temp_images.png
+2025-02-12 19:08:20,772 - INFO - File uploaded successfully to AI service
+2025-02-12 19:08:20,773 - INFO - Processing image file
+2025-02-12 19:08:20,773 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 19:08:20,775 - INFO - AFC remote call 1 is done.
+2025-02-12 19:08:24,764 - INFO - Document analysis completed
+2025-02-12 19:08:24,767 - INFO - Temporary file removed
+2025-02-12 19:08:24,767 - INFO - Document processed successfully
+2025-02-12 19:08:41,151 - INFO - Received chat request with message: what is the image about...
+2025-02-12 19:08:41,151 - INFO - Using chat ID: 1739367490.697204
+2025-02-12 19:08:41,152 - INFO - Sending message to AI model
+2025-02-12 19:08:41,967 - INFO - Received response from AI model
+2025-02-12 19:08:41,969 - INFO - Chat history saved
+2025-02-12 19:11:32,174 - INFO - Received document upload: images.png with chat_id: None
+2025-02-12 19:11:32,178 - INFO - File saved temporarily as: temp_images.png
+2025-02-12 19:11:34,313 - INFO - File uploaded successfully to AI service
+2025-02-12 19:11:34,314 - INFO - Processing image file
+2025-02-12 19:11:34,314 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 19:11:34,315 - INFO - AFC remote call 1 is done.
+2025-02-12 19:11:37,928 - INFO - Document analysis completed
+2025-02-12 19:11:37,929 - INFO - Temporary file removed
+2025-02-12 19:11:37,931 - INFO - Document processed successfully
+2025-02-12 19:11:50,250 - INFO - Received chat request with message: whats the doucment about...
+2025-02-12 19:11:50,251 - INFO - Using chat ID: 1739367691851
+2025-02-12 19:11:50,253 - INFO - Creating new chat session for ID: 1739367691851
+2025-02-12 19:11:50,253 - INFO - Sending message to AI model with context
+2025-02-12 19:11:51,412 - INFO - Received response from AI model
+2025-02-12 19:11:51,414 - INFO - Chat history saved
+2025-02-12 19:12:06,436 - INFO - Received chat request with message: whats the image about...
+2025-02-12 19:12:06,439 - INFO - Using chat ID: 1739367691851
+2025-02-12 19:12:06,439 - INFO - Sending message to AI model with context
+2025-02-12 19:12:08,011 - INFO - Received response from AI model
+2025-02-12 19:12:08,017 - INFO - Chat history saved
+2025-02-12 19:38:07,002 - INFO - Received chat request with message: jz...
+2025-02-12 19:38:07,033 - INFO - Using chat ID: 1739369287.033015
+2025-02-12 19:38:07,034 - INFO - Creating new chat session for ID: 1739369287.033015
+2025-02-12 19:38:07,034 - INFO - Sending message to AI model with context
+2025-02-12 19:38:08,589 - INFO - Received response from AI model
+2025-02-12 19:38:08,591 - INFO - Chat history saved
+2025-02-12 19:38:20,722 - INFO - Received document upload: images.png with chat_id: None
+2025-02-12 19:38:20,723 - INFO - File saved temporarily as: temp_images.png
+2025-02-12 19:38:23,865 - INFO - File uploaded successfully to AI service
+2025-02-12 19:38:23,866 - INFO - Processing image file
+2025-02-12 19:38:23,866 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 19:38:23,868 - INFO - AFC remote call 1 is done.
+2025-02-12 19:38:27,854 - INFO - Document analysis completed
+2025-02-12 19:38:27,857 - INFO - Temporary file removed
+2025-02-12 19:38:27,859 - INFO - Document processed successfully
+2025-02-12 19:38:38,008 - INFO - Received chat request with message: whats the image about...
+2025-02-12 19:38:38,009 - INFO - Using chat ID: 1739369287.033015
+2025-02-12 19:38:38,010 - INFO - Sending message to AI model with context
+2025-02-12 19:38:38,894 - INFO - Received response from AI model
+2025-02-12 19:38:38,895 - INFO - Chat history saved
+2025-02-12 19:41:29,466 - INFO - Received document upload: images.png with chat_id: None
+2025-02-12 19:41:29,468 - INFO - File saved temporarily as: temp_images.png
+2025-02-12 19:41:32,270 - INFO - File uploaded successfully to AI service
+2025-02-12 19:41:32,271 - INFO - Processing image file
+2025-02-12 19:41:32,272 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 19:41:32,273 - INFO - AFC remote call 1 is done.
+2025-02-12 19:41:36,798 - INFO - Document analysis completed
+2025-02-12 19:41:36,799 - INFO - Temporary file removed
+2025-02-12 19:41:36,801 - INFO - Document processed successfully
+2025-02-12 19:41:47,482 - INFO - Received chat request with message: what is the image about...
+2025-02-12 19:41:47,485 - INFO - Using chat ID: 1739369489141
+2025-02-12 19:41:47,486 - INFO - Creating new chat session for ID: 1739369489141
+2025-02-12 19:41:47,486 - INFO - Sending message to AI model with context
+2025-02-12 19:41:48,165 - INFO - Received response from AI model
+2025-02-12 19:41:48,168 - INFO - Chat history saved
+2025-02-12 19:49:12,774 - INFO - Received document upload: images.png with chat_id: None
+2025-02-12 19:49:12,776 - INFO - File saved temporarily as: temp_images.png
+2025-02-12 19:49:14,755 - INFO - File uploaded successfully to AI service
+2025-02-12 19:49:14,755 - INFO - Processing image file
+2025-02-12 19:49:14,757 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 19:49:14,757 - INFO - AFC remote call 1 is done.
+2025-02-12 19:49:18,717 - INFO - Document analysis completed
+2025-02-12 19:49:18,719 - INFO - Temporary file removed
+2025-02-12 19:49:18,721 - INFO - Document processed successfully
+2025-02-12 19:49:25,693 - INFO - Received chat request with message: whats the image about...
+2025-02-12 19:49:25,694 - INFO - Using chat ID: 1739369952449
+2025-02-12 19:49:25,695 - INFO - Creating new chat session for ID: 1739369952449
+2025-02-12 19:49:25,695 - INFO - Sending message to AI model with context
+2025-02-12 19:49:26,586 - INFO - Received response from AI model
+2025-02-12 19:49:26,588 - INFO - Chat history saved
+2025-02-12 19:51:04,907 - INFO - Received document upload: images.png with chat_id: None
+2025-02-12 19:51:04,912 - INFO - File saved temporarily as: temp_images.png
+2025-02-12 19:51:07,058 - INFO - File uploaded successfully to AI service
+2025-02-12 19:51:07,060 - INFO - Processing image file
+2025-02-12 19:51:07,061 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 19:51:07,062 - INFO - AFC remote call 1 is done.
+2025-02-12 19:51:10,566 - INFO - Document analysis completed
+2025-02-12 19:51:10,568 - INFO - Temporary file removed
+2025-02-12 19:51:10,569 - INFO - Document processed successfully
+2025-02-12 19:51:16,746 - INFO - Received chat request with message: whats the image about...
+2025-02-12 19:51:16,749 - INFO - Using chat ID: 1739370064581
+2025-02-12 19:51:16,750 - INFO - Creating new chat session for ID: 1739370064581
+2025-02-12 19:51:16,751 - INFO - Sending message to AI model with context
+2025-02-12 19:51:17,810 - INFO - Received response from AI model
+2025-02-12 19:51:17,812 - INFO - Chat history saved
+2025-02-12 19:58:06,118 - INFO - Received document upload: images.png with chat_id: None
+2025-02-12 19:58:06,121 - INFO - File saved temporarily as: temp_images.png
+2025-02-12 19:58:08,039 - INFO - File uploaded successfully to AI service
+2025-02-12 19:58:08,040 - INFO - Processing image file
+2025-02-12 19:58:08,041 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 19:58:08,042 - INFO - AFC remote call 1 is done.
+2025-02-12 19:58:11,567 - INFO - Document analysis completed
+2025-02-12 19:58:11,571 - INFO - Temporary file removed
+2025-02-12 19:58:11,573 - INFO - Document processed successfully
+2025-02-12 19:58:24,329 - INFO - Received chat request with message: whats the image about...
+2025-02-12 19:58:24,332 - INFO - Using chat ID: 1739370485800
+2025-02-12 19:58:24,332 - INFO - Creating new chat session for ID: 1739370485800
+2025-02-12 19:58:24,333 - INFO - Sending message to AI model with context
+2025-02-12 19:58:26,462 - INFO - Received response from AI model
+2025-02-12 19:58:26,465 - INFO - Chat history saved
+2025-02-12 20:18:32,040 - INFO - Received document upload: images.png with chat_id: None
+2025-02-12 20:18:32,042 - INFO - File saved temporarily as: temp_images.png
+2025-02-12 20:18:33,763 - INFO - File uploaded successfully to AI service
+2025-02-12 20:18:33,764 - INFO - Processing image file
+2025-02-12 20:18:33,764 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 20:18:33,765 - INFO - AFC remote call 1 is done.
+2025-02-12 20:18:37,000 - INFO - Document analysis completed
+2025-02-12 20:18:37,003 - INFO - Temporary file removed
+2025-02-12 20:18:37,005 - INFO - Document processed successfully
+2025-02-12 20:18:47,851 - INFO - Received chat request with message: hi whats the image about...
+2025-02-12 20:18:47,852 - INFO - Using chat ID: 1739371711729
+2025-02-12 20:18:47,853 - INFO - Creating new chat session for ID: 1739371711729
+2025-02-12 20:18:47,854 - INFO - Sending message to AI model with context
+2025-02-12 20:18:49,663 - INFO - Received response from AI model
+2025-02-12 20:18:49,665 - INFO - Chat history saved
+2025-02-12 20:21:45,499 - INFO - Received chat request with message: hi...
+2025-02-12 20:21:45,500 - INFO - Using chat ID: 1739371905.500602
+2025-02-12 20:21:45,501 - INFO - Creating new chat session for ID: 1739371905.500602
+2025-02-12 20:21:45,502 - INFO - Sending message to AI model with context
+2025-02-12 20:21:46,233 - INFO - Received response from AI model
+2025-02-12 20:21:46,267 - INFO - Chat history saved
+2025-02-12 20:21:53,662 - INFO - Received document upload: images.png with chat_id: None
+2025-02-12 20:21:53,663 - INFO - File saved temporarily as: temp_images.png
+2025-02-12 20:21:55,559 - INFO - File uploaded successfully to AI service
+2025-02-12 20:21:55,559 - INFO - Processing image file
+2025-02-12 20:21:55,560 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 20:21:55,561 - INFO - AFC remote call 1 is done.
+2025-02-12 20:21:58,918 - INFO - Document analysis completed
+2025-02-12 20:21:58,920 - INFO - Temporary file removed
+2025-02-12 20:21:58,921 - INFO - Document processed successfully
+2025-02-12 20:23:00,998 - INFO - Received chat request with message: whats the image about...
+2025-02-12 20:23:00,999 - INFO - Using chat ID: 1739371905.500602
+2025-02-12 20:23:00,999 - INFO - Sending message to AI model with context
+2025-02-12 20:23:02,392 - INFO - Received response from AI model
+2025-02-12 20:23:02,395 - INFO - Chat history saved
+2025-02-12 20:24:42,240 - INFO - Received chat request with message: hi...
+2025-02-12 20:24:42,242 - INFO - Using chat ID: 1739371905.500602
+2025-02-12 20:24:42,243 - INFO - Sending message to AI model with context
+2025-02-12 20:24:42,886 - INFO - Received response from AI model
+2025-02-12 20:24:42,889 - INFO - Chat history saved
+2025-02-12 20:25:01,310 - INFO - Received chat request with message: hu...
+2025-02-12 20:25:01,311 - INFO - Using chat ID: 1739372101.311028
+2025-02-12 20:25:01,311 - INFO - Creating new chat session for ID: 1739372101.311028
+2025-02-12 20:25:01,312 - INFO - Sending message to AI model with context
+2025-02-12 20:25:02,796 - INFO - Received response from AI model
+2025-02-12 20:25:02,798 - INFO - Chat history saved
+2025-02-12 20:26:16,080 - INFO - Received chat request with message: hi...
+2025-02-12 20:26:16,084 - INFO - Using chat ID: 1739372176.084218
+2025-02-12 20:26:16,085 - INFO - Creating new chat session for ID: 1739372176.084218
+2025-02-12 20:26:16,086 - INFO - Sending message to AI model with context
+2025-02-12 20:26:16,750 - INFO - Received response from AI model
+2025-02-12 20:26:16,754 - INFO - Chat history saved
+2025-02-12 20:28:12,891 - INFO - Received document upload: images.png with chat_id: None
+2025-02-12 20:28:12,892 - INFO - File saved temporarily as: temp_images.png
+2025-02-12 20:28:14,862 - INFO - File uploaded successfully to AI service
+2025-02-12 20:28:14,863 - INFO - Processing image file
+2025-02-12 20:28:14,863 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 20:28:14,864 - INFO - AFC remote call 1 is done.
+2025-02-12 20:28:18,197 - INFO - Document analysis completed
+2025-02-12 20:28:18,198 - INFO - Temporary file removed
+2025-02-12 20:28:18,199 - INFO - Document processed successfully
+2025-02-12 20:35:41,531 - INFO - File uploaded successfully to AI service
+2025-02-12 20:35:41,533 - INFO - Processing image file
+2025-02-12 20:35:41,534 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 20:35:41,535 - INFO - AFC remote call 1 is done.
+2025-02-12 20:35:45,638 - INFO - Document analysis completed
+2025-02-12 20:39:19,219 - INFO - File uploaded successfully to AI service
+2025-02-12 20:39:19,220 - INFO - Processing image file
+2025-02-12 20:39:19,222 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 20:39:19,223 - INFO - AFC remote call 1 is done.
+2025-02-12 20:39:23,821 - INFO - Document analysis completed
+2025-02-12 23:30:08,197 - ERROR - Error in google_search: module 'google.generativeai' has no attribute 'generate_content', exception type: <class 'AttributeError'>, exception args: ("module 'google.generativeai' has no attribute 'generate_content'",)
+2025-02-12 23:30:08,276 - ERROR - Error in google_search: module 'google.generativeai' has no attribute 'generate_content', exception type: <class 'AttributeError'>, exception args: ("module 'google.generativeai' has no attribute 'generate_content'",)
+2025-02-12 23:40:47,730 - ERROR - Error in google_search: module 'google.generativeai' has no attribute 'generate_content', exception type: <class 'AttributeError'>, exception args: ("module 'google.generativeai' has no attribute 'generate_content'",)
+2025-02-12 23:43:38,543 - INFO - File uploaded successfully to AI service
+2025-02-12 23:43:38,544 - INFO - Processing image file
+2025-02-12 23:43:38,545 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 23:43:38,545 - INFO - AFC remote call 1 is done.
+2025-02-12 23:43:43,935 - INFO - Document analysis completed
+2025-02-12 23:44:16,751 - INFO - File uploaded successfully to AI service
+2025-02-12 23:44:16,752 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 23:44:16,752 - INFO - AFC remote call 1 is done.
+2025-02-12 23:44:22,542 - INFO - Document analysis completed
+2025-02-12 23:51:07,299 - INFO - File uploaded successfully to AI service
+2025-02-12 23:51:07,300 - INFO - Processing image file
+2025-02-12 23:51:07,301 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 23:51:07,302 - INFO - AFC remote call 1 is done.
+2025-02-12 23:51:11,470 - INFO - Document analysis completed
+2025-02-12 23:52:19,179 - INFO - File uploaded successfully to AI service
+2025-02-12 23:52:19,181 - INFO - Processing image file
+2025-02-12 23:52:19,181 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 23:52:19,181 - INFO - AFC remote call 1 is done.
+2025-02-12 23:52:23,140 - INFO - Document analysis completed
+2025-02-12 23:55:46,330 - INFO - File uploaded successfully to AI service
+2025-02-12 23:55:46,332 - INFO - Processing image file
+2025-02-12 23:55:46,334 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 23:55:46,335 - INFO - AFC remote call 1 is done.
+2025-02-12 23:55:50,953 - INFO - Document analysis completed
+2025-02-12 23:58:13,709 - INFO - File uploaded successfully to AI service
+2025-02-12 23:58:13,711 - INFO - Processing image file
+2025-02-12 23:58:13,711 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-12 23:58:13,712 - INFO - AFC remote call 1 is done.
+2025-02-12 23:58:17,895 - INFO - Document analysis completed
+2025-02-13 00:23:46,609 - INFO - File uploaded successfully to AI service
+2025-02-13 00:23:46,640 - INFO - Processing image file
+2025-02-13 00:23:46,640 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-13 00:23:46,641 - INFO - AFC remote call 1 is done.
+2025-02-13 00:23:51,310 - INFO - Document analysis completed
+2025-02-13 00:29:07,455 - INFO - Starting document processing for file: temp_spcc3.pdf
+2025-02-13 00:29:07,456 - INFO - Starting document preparation for file: temp_spcc3.pdf
+2025-02-13 00:29:10,069 - INFO - File uploaded successfully
+2025-02-13 00:29:10,070 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-13 00:29:20,776 - INFO - AFC remote call 1 is done.
+2025-02-13 00:29:20,777 - INFO - Received initial AI response
+2025-02-13 00:29:20,779 - INFO - Starting document analysis
+2025-02-13 00:29:20,783 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-13 00:29:26,893 - INFO - AFC remote call 1 is done.
+2025-02-13 00:29:26,895 - INFO - Received structured response from AI
+2025-02-13 00:29:26,895 - INFO - Successfully parsed JSON response
+2025-02-13 00:29:26,895 - ERROR - Error in analyze_document: 1 validation error for PaperCheckResult
+Name
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.5/v/string_type
+Traceback (most recent call last):
+  File "F:\Aniruddha\code\webdev\PROJECTS\teacherassistant\backend\document.py", line 145, in analyze_document
+    results = [PaperCheckResult(**item) for item in data]
+  File "F:\Aniruddha\code\webdev\PROJECTS\teacherassistant\backend\document.py", line 145, in <listcomp>
+    results = [PaperCheckResult(**item) for item in data]
+  File "C:\Users\Aniruddha Chaudhari\AppData\Local\Programs\Python\Python310\lib\site-packages\pydantic\main.py", line 164, in __init__
+    __pydantic_self__.__pydantic_validator__.validate_python(data, self_instance=__pydantic_self__)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for PaperCheckResult
+Name
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.5/v/string_type
+2025-02-13 00:29:26,898 - ERROR - Document analysis failed: 1 validation error for PaperCheckResult
+Name
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.5/v/string_type
+2025-02-13 00:30:45,644 - INFO - Starting document processing for file: temp_spcc3.pdf
+2025-02-13 00:30:45,647 - INFO - Starting document preparation for file: temp_spcc3.pdf
+2025-02-13 00:30:49,530 - INFO - File uploaded successfully
+2025-02-13 00:30:49,531 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-13 00:30:59,884 - INFO - AFC remote call 1 is done.
+2025-02-13 00:30:59,886 - INFO - Received initial AI response
+2025-02-13 00:30:59,886 - INFO - Starting document analysis
+2025-02-13 00:30:59,887 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-13 00:31:06,191 - INFO - AFC remote call 1 is done.
+2025-02-13 00:31:06,193 - INFO - Received structured response from AI
+2025-02-13 00:31:06,194 - INFO - Successfully parsed JSON response
+2025-02-13 00:31:06,195 - INFO - Processed data structure: marks=65, remarks=5, suggestions=7, errors=4
+2025-02-13 00:31:06,196 - INFO - Successfully created final response
+2025-02-13 00:31:06,197 - INFO - Document processing completed successfully
+2025-02-13 00:37:25,514 - INFO - Starting document processing for file: temp_cc4.pdf
+2025-02-13 00:37:25,516 - INFO - Starting document preparation for file: temp_cc4.pdf
+2025-02-13 00:37:37,017 - INFO - File uploaded successfully
+2025-02-13 00:37:37,018 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-13 00:37:48,528 - INFO - AFC remote call 1 is done.
+2025-02-13 00:37:48,531 - INFO - Received initial AI response
+2025-02-13 00:37:48,532 - INFO - Starting document analysis
+2025-02-13 00:37:48,533 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-13 00:37:52,296 - INFO - AFC remote call 1 is done.
+2025-02-13 00:37:52,298 - INFO - Received structured response from AI
+2025-02-13 00:37:52,300 - INFO - Successfully parsed JSON response
+2025-02-13 00:37:52,300 - ERROR - Error in analyze_document: 1 validation error for PaperCheckResult
+Name
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.5/v/string_type
+Traceback (most recent call last):
+  File "F:\Aniruddha\code\webdev\PROJECTS\teacherassistant\backend\document.py", line 146, in analyze_document
+    results = [PaperCheckResult(**item) for item in data]
+  File "F:\Aniruddha\code\webdev\PROJECTS\teacherassistant\backend\document.py", line 146, in <listcomp>
+    results = [PaperCheckResult(**item) for item in data]
+  File "C:\Users\Aniruddha Chaudhari\AppData\Local\Programs\Python\Python310\lib\site-packages\pydantic\main.py", line 164, in __init__
+    __pydantic_self__.__pydantic_validator__.validate_python(data, self_instance=__pydantic_self__)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for PaperCheckResult
+Name
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.5/v/string_type
+2025-02-13 00:37:52,318 - ERROR - Document analysis failed: 1 validation error for PaperCheckResult
+Name
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.5/v/string_type
+2025-02-13 00:42:02,031 - INFO - Starting document processing for file: temp_cc4.pdf
+2025-02-13 00:42:02,034 - INFO - Starting document preparation for file: temp_cc4.pdf
+2025-02-13 00:42:07,948 - INFO - File uploaded successfully
+2025-02-13 00:42:07,949 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-13 00:42:17,293 - INFO - AFC remote call 1 is done.
+2025-02-13 00:42:17,294 - INFO - Received initial AI response
+2025-02-13 00:42:17,294 - INFO - Starting document analysis
+2025-02-13 00:42:17,296 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-13 00:42:20,490 - INFO - AFC remote call 1 is done.
+2025-02-13 00:42:20,491 - INFO - Received structured response from AI
+2025-02-13 00:42:20,492 - INFO - Successfully parsed JSON response
+2025-02-13 00:42:20,492 - INFO - Processed data structure: marks=70, remarks=6, suggestions=7, errors=2
+2025-02-13 00:42:20,493 - INFO - Successfully created final response
+2025-02-13 00:42:20,493 - INFO - Document processing completed successfully
+2025-02-13 00:44:41,120 - INFO - Starting document processing for file: temp_AI exp3-2.pdf
+2025-02-13 00:44:41,121 - INFO - Starting document preparation for file: temp_AI exp3-2.pdf
+2025-02-13 00:44:45,539 - INFO - File uploaded successfully
+2025-02-13 00:44:45,547 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-13 00:44:55,193 - INFO - AFC remote call 1 is done.
+2025-02-13 00:44:55,194 - INFO - Received initial AI response
+2025-02-13 00:44:55,194 - INFO - Starting document analysis
+2025-02-13 00:44:55,195 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-13 00:44:57,843 - INFO - AFC remote call 1 is done.
+2025-02-13 00:44:57,846 - INFO - Received structured response from AI
+2025-02-13 00:44:57,847 - INFO - Successfully parsed JSON response
+2025-02-13 00:44:57,847 - INFO - Processed data structure: marks=78, remarks=7, suggestions=8, errors=1
+2025-02-13 00:44:57,848 - INFO - Successfully created final response
+2025-02-13 00:44:57,849 - INFO - Document processing completed successfully
+2025-02-13 08:59:20,775 - INFO - File uploaded successfully to AI service
+2025-02-13 08:59:20,807 - INFO - Processing image file
+2025-02-13 08:59:20,809 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-13 08:59:20,810 - INFO - AFC remote call 1 is done.
+2025-02-13 08:59:26,931 - INFO - Document analysis completed
+2025-02-13 09:02:04,327 - INFO - Starting document processing for file: temp_AI exp3-2.pdf
+2025-02-13 09:02:04,329 - INFO - Starting document preparation for file: temp_AI exp3-2.pdf
+2025-02-13 09:02:06,626 - INFO - File uploaded successfully
+2025-02-13 09:02:06,626 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-13 09:02:18,772 - INFO - AFC remote call 1 is done.
+2025-02-13 09:02:18,773 - INFO - Received initial AI response
+2025-02-13 09:02:18,774 - INFO - Starting document analysis
+2025-02-13 09:02:18,775 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-13 09:02:22,908 - INFO - AFC remote call 1 is done.
+2025-02-13 09:02:22,909 - INFO - Received structured response from AI
+2025-02-13 09:02:22,911 - INFO - Successfully parsed JSON response
+2025-02-13 09:02:22,911 - INFO - Processed data structure: marks=75, remarks=7, suggestions=6, errors=3
+2025-02-13 09:02:22,912 - INFO - Successfully created final response
+2025-02-13 09:02:22,913 - INFO - Document processing completed successfully
+2025-02-13 10:39:48,041 - INFO - File uploaded successfully to AI service
+2025-02-13 10:39:48,073 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-13 10:39:48,075 - INFO - AFC remote call 1 is done.
+2025-02-13 10:39:55,246 - INFO - Document analysis completed
+2025-02-13 11:09:26,728 - INFO - File uploaded successfully to AI service
+2025-02-13 11:09:26,731 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-13 11:09:26,731 - INFO - AFC remote call 1 is done.
+2025-02-13 11:09:32,666 - INFO - Document analysis completed
+2025-02-14 11:29:09,016 - INFO - File uploaded successfully to AI service
+2025-02-14 11:29:09,047 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-14 11:29:09,048 - INFO - AFC remote call 1 is done.
+2025-02-14 11:29:16,202 - INFO - Document analysis completed
+2025-02-14 11:33:57,445 - INFO - File uploaded successfully to AI service
+2025-02-14 11:33:57,447 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-14 11:33:57,448 - INFO - AFC remote call 1 is done.
+2025-02-14 11:34:03,999 - INFO - Document analysis completed
+2025-02-14 11:35:08,019 - INFO - File uploaded successfully to AI service
+2025-02-14 11:35:08,020 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-14 11:35:08,020 - INFO - AFC remote call 1 is done.
+2025-02-14 11:35:15,169 - INFO - Document analysis completed
+2025-02-14 11:36:31,254 - INFO - File uploaded successfully to AI service
+2025-02-14 11:36:31,255 - INFO - Processing image file
+2025-02-14 11:36:31,256 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-14 11:36:31,257 - INFO - AFC remote call 1 is done.
+2025-02-14 11:36:35,699 - INFO - Document analysis completed
+2025-02-22 15:25:42,026 - INFO - Starting document processing for file: temp_spcc3.pdf
+2025-02-22 15:25:42,030 - INFO - Starting document preparation for file: temp_spcc3.pdf
+2025-02-22 15:25:44,912 - INFO - File uploaded successfully
+2025-02-22 15:25:44,913 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-22 15:25:58,316 - INFO - AFC remote call 1 is done.
+2025-02-22 15:25:58,318 - INFO - Received initial AI response
+2025-02-22 15:25:58,319 - INFO - Starting document analysis
+2025-02-22 15:25:58,319 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-22 15:26:04,227 - INFO - AFC remote call 1 is done.
+2025-02-22 15:26:04,229 - INFO - Received structured response from AI
+2025-02-22 15:26:04,230 - INFO - Successfully parsed JSON response
+2025-02-22 15:26:04,237 - ERROR - Error in analyze_document: 1 validation error for PaperCheckResult
+Name
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.5/v/string_type
+Traceback (most recent call last):
+  File "F:\Aniruddha\code\webdev\PROJECTS\teacherassistant\backend\document.py", line 146, in analyze_document
+    results = [PaperCheckResult(**item) for item in data]
+  File "F:\Aniruddha\code\webdev\PROJECTS\teacherassistant\backend\document.py", line 146, in <listcomp>
+    results = [PaperCheckResult(**item) for item in data]
+  File "C:\Users\Aniruddha Chaudhari\AppData\Local\Programs\Python\Python310\lib\site-packages\pydantic\main.py", line 164, in __init__
+    __pydantic_self__.__pydantic_validator__.validate_python(data, self_instance=__pydantic_self__)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for PaperCheckResult
+Name
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.5/v/string_type
+2025-02-22 15:26:04,241 - ERROR - Document analysis failed: 1 validation error for PaperCheckResult
+Name
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.5/v/string_type
+2025-02-22 15:30:39,457 - INFO - Starting document processing for file: temp_spcc3.pdf
+2025-02-22 15:30:39,459 - INFO - Starting document preparation for file: temp_spcc3.pdf
+2025-02-22 15:30:42,404 - INFO - File uploaded successfully
+2025-02-22 15:30:42,405 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-22 15:30:55,007 - INFO - AFC remote call 1 is done.
+2025-02-22 15:30:55,008 - INFO - Received initial AI response
+2025-02-22 15:30:55,009 - INFO - Starting document analysis
+2025-02-22 15:30:55,012 - INFO - AFC is enabled with max remote calls: 10.
+2025-02-22 15:31:00,754 - INFO - AFC remote call 1 is done.
+2025-02-22 15:31:00,754 - INFO - Received structured response from AI
+2025-02-22 15:31:00,756 - INFO - Successfully parsed JSON response
+2025-02-22 15:31:00,756 - INFO - Processed data structure: marks=65, remarks=5, suggestions=10, errors=2
+2025-02-22 15:31:00,756 - INFO - Successfully created final response
+2025-02-22 15:31:00,757 - INFO - Document processing completed successfully
