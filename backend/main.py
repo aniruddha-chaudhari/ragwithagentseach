@@ -1,242 +1,259 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
-import google.generativeai as genai
-from google.genai import types  # new import
-import shutil
 import os
 import json
-from datetime import datetime
-from document import process_document
-from utils import prepare_document
-from google.api_core.exceptions import ResourceExhausted
-import absl.logging
+import tempfile
+from typing import List, Optional, Dict, Any
+from dotenv import load_dotenv
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, BackgroundTasks, Query
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, HttpUrl
+from contextlib import asynccontextmanager
+import google.generativeai as genai
 
-# Suppress verbose logs
-absl.logging.set_verbosity(absl.logging.ERROR)
+# Import shared functionality from embedder.py
+from embedder import (
+    init_pinecone,
+    create_vector_store,
+    check_document_relevance,
+)
 
-# Configure Gemini
-genai.configure(api_key='AIzaSyD4lR1WQ1yaZumSFtMVTG_0Y8d0oRy1XhA')
+from search import google_search
 
-# Create the model with configuration
-generation_config = {
-	"temperature": 1,
-	"top_p": 0.95,
-	"top_k": 40,
-	"max_output_tokens": 8192,
+# Import document processing functions
+from document_loader import prepare_document, process_pdf, process_web, process_image
+
+# Import agents
+from agents.writeragents import get_query_rewriter_agent, get_rag_agent, test_url_detector
+
+# Load environment variables
+load_dotenv()
+
+# Get API keys from environment variables with fallbacks
+GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY", "")
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY", "")
+
+# Hardcoded similarity threshold
+SIMILARITY_THRESHOLD = 0.7
+
+# Initialize app state
+app_state = {
+    "vector_store": None,
+    "processed_documents": [],
+    "pinecone_client": None
 }
 
-model = genai.GenerativeModel(
-	model_name="gemini-2.0-flash",
-	generation_config=generation_config,
-)
+# Setup lifespan for FastAPI
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize on startup
+    os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
+    genai.configure(api_key=GOOGLE_API_KEY)
+    app_state["pinecone_client"] = init_pinecone(PINECONE_API_KEY)
+    
+    yield
+    
+    # Clean up on shutdown
+    app_state["vector_store"] = None
+    app_state["processed_documents"] = []
 
-# Data Models
-class ChatMessage(BaseModel):
-	role: str
-	content: str
-	chat_id: Optional[str] = None  # Added optional chat_id
+app = FastAPI(title="Teacher Assistant API", description="API for teacher assistant with RAG capabilities", lifespan=lifespan)
 
-class ChatRequest(BaseModel):
-	message: str
-	chat_id: Optional[str] = None
-
-class ChatResponse(BaseModel):
-	message: str
-	chat_id: str
-
-class GoogleSearchRequest(BaseModel):
-	query: str
-
-app = FastAPI()
-
-# Add CORS middleware
+# Enable CORS
 app.add_middleware(
-	CORSMiddleware,
-	allow_origins=["*"],
-	allow_credentials=True,
-	allow_methods=["*"],
-	allow_headers=["*"],
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, replace with specific origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Store chat sessions and document context
-chat_sessions = {}
-document_context = {}
-conversation_history = []
+# Pydantic models for requests and responses
+class MessageRequest(BaseModel):
+    content: str
+    force_web_search: bool = False
 
-def save_chat_history(chat_id: str, history: List[Dict[str, Any]]):
-	if not os.path.exists('data'):
-		os.makedirs('data')
-	with open(f'data/{chat_id}-st_messages', 'w') as f:
-		json.dump(history, f)
+class MessageResponse(BaseModel):
+    content: str
+    sources: List[Dict[str, str]] = []
 
-def load_chat_history(chat_id: str) -> List[Dict[str, Any]]:
-	try:
-		with open(f'data/{chat_id}-st_messages', 'r') as f:
-			return json.load(f)
-	except FileNotFoundError:
-		return []
+class ProcessUrlRequest(BaseModel):
+    url: HttpUrl
 
-def add_message(role: str, text: str) -> None:
-	conversation_history.append({
-		"role": role,
-		"parts": [text.rstrip("\n") + "\n"]
-	})
+class SourceResponse(BaseModel):
+    sources: List[str]
 
-# ------------------ Chat API Routes ------------------
-
-@app.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest):
-	try:
-		chat_id = request.chat_id or str(datetime.now().timestamp())
-		
-		if chat_id not in chat_sessions:
-			history = load_chat_history(chat_id)
-			chat_sessions[chat_id] = model.start_chat(history=history)
-
-		chat_session = chat_sessions[chat_id]
-		
-		# Add document context if available
-		context_prompt = ""
-		if chat_id in document_context:
-			context = document_context[chat_id]
-			context_prompt = (
-				f"Remember this context about the document/image the user uploaded:\n"
-				f"{context}\n\n"
-				f"Now answer this question considering the above context:\n"
-			)
-		
-		full_prompt = context_prompt + request.message
-		response = chat_session.send_message(full_prompt)
-		
-		current_history = [
-			{"role": "user", "parts": [request.message]},
-			{"role": "model", "parts": [response.text]}
-		]
-		save_chat_history(chat_id, current_history)
-		
-		return ChatResponse(message=response.text, chat_id=chat_id)
-		
-	except ResourceExhausted:
-		raise HTTPException(status_code=429, detail="API quota exceeded")
-	except Exception as e:
-		raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/chat/send-message")
-async def send_message(chat_message: ChatMessage):
-	user_msg = chat_message.content
-	# Prepend document context if available for the provided chat_id
-	if chat_message.chat_id and chat_message.chat_id in document_context:
-		lower_msg = user_msg.lower().strip()
-		# Immediately return stored document context if message asks about the image
-		if lower_msg in ["whats the image about", "what's the image about", "whats the image about?", "what's the image about?"]:
-			response_text = document_context[chat_message.chat_id]
-			add_message("user", user_msg)
-			add_message("model", response_text)
-			return {"response": response_text}
-		# Otherwise, prepend the context to the user's message
-		context = document_context[chat_message.chat_id]
-		user_msg = (f"Remember this context about the document/image the user uploaded:\n"
-					f"{context}\n\n"
-					f"Now answer this question considering the above context:\n"
-					f"{user_msg}")
-	add_message("user", user_msg)
-	try:
-		chat_session = model.start_chat(history=conversation_history)
-		response = chat_session.send_message(user_msg)
-		add_message("model", response.text)
-		return {"response": response.text}
-	except ResourceExhausted:
-		return {"success": False, "error": "Resource exhausted. Please check your quota."}
-	except Exception as e:
-		return {"success": False, "error": str(e)}
-
-@app.post("/chat/upload-document")
-async def upload_document(
-	file: UploadFile = File(...),
-	chat_id: Optional[str] = None,
-):
-	try:
-		temp_file_path = f"temp_{file.filename}"
-		with open(temp_file_path, "wb") as buffer:
-			shutil.copyfileobj(file.file, buffer)
-		
-		full_response = ""
-		for chunk in prepare_document(temp_file_path, "Describe this document."):
-			full_response += chunk
-		
-		os.remove(temp_file_path)
-		
-		# Store the context for this chat session
-		auto_bot_response = ""
-		if chat_id:
-			document_context[chat_id] = full_response
-			# Reinitialize chat session to include updated context
-			chat_sessions[chat_id] = model.start_chat(history=load_chat_history(chat_id))
-			# Auto-send a message to the chat bot using the document context
-			auto_prompt = "what is the image about?"
-			auto_bot_response_obj = chat_sessions[chat_id].send_message(auto_prompt)
-			auto_bot_response = auto_bot_response_obj.text
-			# Append messages to conversation history
-			add_message("user", auto_prompt)
-			add_message("model", auto_bot_response)
-		
-		# Also add the document response as a message for front-end display
-		add_message("user", f"Document upload response:\n{full_response}")
-		
-		return {"success": True, "document_response": full_response, "auto_bot_response": auto_bot_response}
-	except Exception as e:
-		return {"success": False, "error": str(e)}
-
-# ------------------ Paper Analysis Routes ------------------
-
-@app.post("/analyze-paper")
-async def analyze_paper(file: UploadFile = File(...)):
-	try:
-		temp_file_path = f"temp_{file.filename}"
-		with open(temp_file_path, "wb") as buffer:
-			shutil.copyfileobj(file.file, buffer)
-		
-		result = process_document(temp_file_path)
-		os.remove(temp_file_path)
-		return result
-	except Exception as e:
-		return {"success": False, "error": str(e)}
-
+# API routes
 @app.get("/")
 async def root():
-	return {"message": "Teacher Assistant API is running"}
+    return {"message": "Teacher Assistant API is running"}
 
-# ------------------ New Google Search Route ------------------
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy", 
+        "google_api_key": bool(GOOGLE_API_KEY),
+        "pinecone_api_key": bool(PINECONE_API_KEY),
+        "pinecone_client": bool(app_state["pinecone_client"]),
+        "documents_processed": len(app_state["processed_documents"])
+    }
 
-@app.post("/chat/google-search")
-async def google_search(request: GoogleSearchRequest):
-	try:
-		absl.logging.info("Received google search request: %s", request.dict())
-		if not request.query.strip():
-			absl.logging.error("Empty query received")
-			raise HTTPException(status_code=422, detail="Query cannot be empty")
-		response = genai.generate_content(
-			model='gemini-2.0-flash',
-			prompt=request.query,
-			config=types.GenerateContentConfig(
-				tools=[types.Tool(google_search=types.GoogleSearchRetrieval)]
-			)
-		)
-		absl.logging.info("Generated google search response: %s", response)
-		return {"response": response}
-	except Exception as e:
-		absl.logging.error("Error in google_search: %s", str(e))
-		raise HTTPException(status_code=500, detail=str(e))
+@app.post("/process/document", response_model=SourceResponse)
+async def process_document(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
+    """Process a document and add to vector store"""
+    file_name = file.filename
+    if file_name in app_state["processed_documents"]:
+        return {"sources": app_state["processed_documents"]}
+    
+    try:
+        # Save uploaded file to temp location
+        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file_name)[1]) as temp_file:
+            temp_file.write(await file.read())
+            temp_path = temp_file.name
+        
+        # Process based on file type
+        file_ext = os.path.splitext(file_name)[1].lower()
+        
+        if file_ext in ['.png', '.jpg', '.jpeg', '.gif', '.webp']:
+            with open(temp_path, 'rb') as f:
+                texts = process_image(f)
+            doc_type = "Image"
+        else:  # PDF or other document types
+            with open(temp_path, 'rb') as f:
+                texts = process_pdf(f)
+            doc_type = "Document"
+            
+        # Clean up temp file
+        os.unlink(temp_path)
+        
+        if texts and app_state["pinecone_client"]:
+            if app_state["vector_store"]:
+                app_state["vector_store"].add_documents(texts)
+            else:
+                app_state["vector_store"] = create_vector_store(app_state["pinecone_client"], texts)
+            app_state["processed_documents"].append(file_name)
+            
+        return {"sources": app_state["processed_documents"]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing document: {str(e)}")
+
+@app.post("/process/url", response_model=SourceResponse)
+async def process_url(request: ProcessUrlRequest):
+    """Process a URL and add to vector store"""
+    web_url = str(request.url)
+    if web_url in app_state["processed_documents"]:
+        return {"sources": app_state["processed_documents"]}
+    
+    try:
+        texts = process_web(web_url)
+        if texts and app_state["pinecone_client"]:
+            if app_state["vector_store"]:
+                app_state["vector_store"].add_documents(texts)
+            else:
+                app_state["vector_store"] = create_vector_store(app_state["pinecone_client"], texts)
+            app_state["processed_documents"].append(web_url)
+            
+        return {"sources": app_state["processed_documents"]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing URL: {str(e)}")
+
+@app.post("/chat", response_model=MessageResponse)
+async def chat(request: MessageRequest):
+    """Process a chat message and return response"""
+    prompt = request.content
+    force_web_search = request.force_web_search
+    
+    # Process and respond to the message
+    try:
+        # Check for URLs in prompt
+        url_detector = test_url_detector(prompt)
+        detected_urls = url_detector.urls
+        
+        # Process any detected URLs
+        for url in detected_urls:
+            if url not in app_state["processed_documents"]:
+                texts = process_web(url)
+                if texts and app_state["pinecone_client"]:
+                    if app_state["vector_store"]:
+                        app_state["vector_store"].add_documents(texts)
+                    else:
+                        app_state["vector_store"] = create_vector_store(app_state["pinecone_client"], texts)
+                    app_state["processed_documents"].append(url)
+        
+        # Rewrite the query for better retrieval
+        query_rewriter = get_query_rewriter_agent()
+        rewritten_query = query_rewriter.run(prompt).content
+        
+        # Choose search strategy
+        context = ""
+        search_links = []
+        source_docs = []
+        
+        if not force_web_search and app_state["vector_store"]:
+            # Try document search first
+            has_relevant_docs, docs = check_document_relevance(
+                rewritten_query,
+                app_state["vector_store"],
+                SIMILARITY_THRESHOLD
+            )
+            
+            if docs:
+                context = "\n\n".join([d.page_content for d in docs])
+                source_docs = docs
+        
+        # Use Google search if applicable
+        if (force_web_search or not context):
+            search_results, search_links = google_search(rewritten_query)
+            if search_results:
+                context = f"Google Search Results:\n{search_results}"
+        
+        # Generate response using the RAG agent
+        rag_agent = get_rag_agent()
+        
+        if context:
+            full_prompt = f"""Context: {context}
+
+Original Question: {prompt}
+Rewritten Question: {rewritten_query}
+
+"""
+            if search_links:
+                full_prompt += f"Source Links:\n" + "\n".join([f"- {link}" for link in search_links]) + "\n\n"
+            
+            full_prompt += "Please provide a comprehensive answer based on the available information."
+        else:
+            full_prompt = f"Original Question: {prompt}\nRewritten Question: {rewritten_query}"
+
+        response = rag_agent.run(full_prompt)
+        
+        # Prepare sources for response
+        sources = []
+        if source_docs:
+            for doc in source_docs:
+                source_type = doc.metadata.get("source_type", "unknown")
+                source_name = doc.metadata.get("file_name", "unknown")
+                sources.append({
+                    "type": source_type,
+                    "name": source_name,
+                    "content": doc.page_content[:200] + "..." if len(doc.page_content) > 200 else doc.page_content
+                })
+        
+        if search_links:
+            for link in search_links:
+                sources.append({
+                    "type": "web",
+                    "name": link,
+                    "content": ""
+                })
+        
+        return {"content": response.content, "sources": sources}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing message: {str(e)}")
+
+@app.get("/sources", response_model=SourceResponse)
+async def get_sources():
+    """Get all processed document sources"""
+    return {"sources": app_state["processed_documents"]}
 
 if __name__ == "__main__":
-	import uvicorn
-	uvicorn.run(
-		"main:app",
-		host="0.0.0.0",
-		port=8000,
-		reload=True,  # Enable hot reloading
-		reload_excludes=["*.pyc", "*.log"],  # Exclude unnecessary files from reload
-		reload_includes=["*.py", "*.json"],  # Watch Python and JSON files
-	)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

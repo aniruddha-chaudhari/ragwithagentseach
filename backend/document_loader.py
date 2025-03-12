@@ -158,3 +158,21 @@ def process_web(url: str) -> List:
     title, content_chunks = extract_title_and_split_content(docs)
     print(f"Title of the web document: {title}")  # Print statement
     return content_chunks
+
+def process_image(file) -> List:
+    """Process image file and add source metadata."""
+    try:
+        file_path = None
+        # Determine file extension from the uploaded file name
+        file_ext = os.path.splitext(file.name)[1].lower()
+        
+        # Create temporary file with appropriate extension
+        with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as tmp_file:
+            tmp_file.write(file.getvalue())
+            file_path = tmp_file.name
+            
+        # Use the document processor to handle the image
+        return prepare_document(file_path)
+    except Exception as e:
+        st.error(f"🖼️ Image processing error: {str(e)}")
+        return []

@@ -3,7 +3,7 @@ import absl.logging  # Added import
 absl.logging.set_verbosity(absl.logging.ERROR)  # Suppress verbose logs
 import google.generativeai as genai
 from google.api_core.exceptions import ResourceExhausted  # Added import
-from utils import prepare_document  # Imported upload function from utils.py
+from backend.test1.utils import prepare_document  # Imported upload function from utils.py
 
 genai.configure(api_key='AIzaSyD4lR1WQ1yaZumSFtMVTG_0Y8d0oRy1XhA')
 
