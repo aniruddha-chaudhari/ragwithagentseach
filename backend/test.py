@@ -20,10 +20,26 @@ from embedder import (
 )
 
 from utils.formaturl import format_url_display
+from utils.supabase_client import initialize_supabase  # Import Supabase client
+from utils.session_manager import (  # Import session management functions
+    save_session,
+    load_session,
+    get_available_sessions,
+    get_session_vector_store,
+    save_current_session,
+    load_session_data,
+    create_new_session
+)
 from search import google_search
 from agents.intentdetectorAgent import detect_google_search_intent
-from document_loader import prepare_document, process_pdf, process_web, process_image
-from agents.writeragents import get_query_rewriter_agent, get_rag_agent, test_url_detector
+from document_loader import (
+    prepare_document, 
+    process_pdf, 
+    process_web, 
+    process_image, 
+    scrape_images_from_search_results
+)
+from agents.writeragents import get_query_rewriter_agent, get_rag_agent, test_url_detector, generate_session_title
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -33,111 +49,12 @@ load_dotenv()
 GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY", "")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY", "")
 SIMILARITY_THRESHOLD = 0.7
-SESSIONS_DIR = Path("./saved_sessions")
 
 # Initialize API clients first
 os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 genai.configure(api_key=GOOGLE_API_KEY)
 pinecone_client = init_pinecone(PINECONE_API_KEY)
-
-# Create sessions directory if it doesn't exist
-SESSIONS_DIR.mkdir(exist_ok=True)
-
-# Session storage functions
-def save_session(session_id: str, session_data: Dict[str, Any]) -> None:
-    """Save session data to file"""
-    session_file = SESSIONS_DIR / f"{session_id}.pkl"
-    with open(session_file, 'wb') as f:
-        pickle.dump(session_data, f)
-
-def load_session(session_id: str) -> Dict[str, Any]:
-    """Load session data from file"""
-    session_file = SESSIONS_DIR / f"{session_id}.pkl"
-    if not session_file.exists():
-        return None
-    
-    with open(session_file, 'rb') as f:
-        return pickle.load(f)
-
-def get_available_sessions() -> List[str]:
-    """Get list of available saved sessions"""
-    if not SESSIONS_DIR.exists():
-        return []
-    return [f.stem for f in SESSIONS_DIR.glob("*.pkl")]
-
-def format_url_display(url, max_length=50):
-    """Format URL for display by shortening if needed."""
-    if len(url) > max_length:
-        # Keep the domain and truncate the path
-        domain = url.split('//')[-1].split('/')[0]
-        return f"{domain}/...{url[-20:]}"
-    return url
-
-def get_session_vector_store():
-    """Get or create a vector store for the current session."""
-    session_id = st.session_state.chat_session_id
-    
-    # If the session already has a vector store, return it
-    if session_id in st.session_state.session_vector_stores:
-        return st.session_state.session_vector_stores[session_id]
-    
-    # If we have a global vector store, but not for this session,
-    # create one with the appropriate namespace
-    if pinecone_client:
-        # Initialize empty vector store with namespace
-        try:
-            index = pinecone_client.Index(INDEX_NAME)
-            from embedder import INDEX_NAME, GeminiEmbedder
-            vector_store = PineconeVectorStore(
-                index=index,
-                embedding=GeminiEmbedder(),
-                text_key="text",
-                namespace=session_id
-            )
-            st.session_state.session_vector_stores[session_id] = vector_store
-            return vector_store
-        except Exception as e:
-            st.error(f"Error initializing vector store: {e}")
-    
-    return None
-
-def save_current_session():
-    """Save the current session state to a file"""
-    session_id = st.session_state.chat_session_id
-    session_data = {
-        "history": st.session_state.history,
-        "processed_documents": st.session_state.processed_documents,
-        "info_messages": st.session_state.info_messages,
-        "rewritten_query": st.session_state.rewritten_query,
-        "search_sources": st.session_state.search_sources,
-        "doc_sources": st.session_state.doc_sources,
-        "use_web_search": st.session_state.use_web_search,
-        "session_id": session_id,
-    }
-    save_session(session_id, session_data)
-    
-    # Update available sessions list
-    st.session_state.available_sessions = get_available_sessions()
-    return session_id
-
-def load_session_data(session_id):
-    """Load a session from saved file"""
-    session_data = load_session(session_id)
-    if session_data:
-        st.session_state.chat_session_id = session_data.get("session_id", session_id)
-        st.session_state.history = session_data.get("history", [])
-        st.session_state.processed_documents = session_data.get("processed_documents", [])
-        st.session_state.info_messages = session_data.get("info_messages", [])
-        st.session_state.rewritten_query = session_data.get("rewritten_query", {"original": "", "rewritten": ""})
-        st.session_state.search_sources = session_data.get("search_sources", [])
-        st.session_state.doc_sources = session_data.get("doc_sources", [])
-        st.session_state.use_web_search = session_data.get("use_web_search", False)
-        
-        # Get vector store for this session
-        st.session_state.vector_store = get_session_vector_store()
-        
-        return True
-    return False
+supabase_client = initialize_supabase()  # Initialize Supabase client
 
 # Streamlit App Initialization
 st.title("Agentic Chatbot")
@@ -170,11 +87,17 @@ if 'doc_sources' not in st.session_state:
     st.session_state.doc_sources = []
 # Chat session namespace management
 if 'chat_session_id' not in st.session_state:
-    st.session_state.chat_session_id = f"session_{uuid.uuid4().hex[:8]}"
+    st.session_state.chat_session_id = str(uuid.uuid4())
 if 'session_vector_stores' not in st.session_state:
     st.session_state.session_vector_stores = {}
 if 'available_sessions' not in st.session_state:
     st.session_state.available_sessions = get_available_sessions()
+if 'supabase_errors' not in st.session_state:
+    st.session_state.supabase_errors = []
+if 'show_error_container' not in st.session_state:
+    st.session_state.show_error_container = False
+if 'search_images' not in st.session_state:
+    st.session_state.search_images = []
 
 
 # Sidebar Configuration
@@ -184,45 +107,43 @@ st.sidebar.header("⚙️ Configuration")
 with st.sidebar.expander("💬 Session Management"):
     st.write(f"Current Session ID: {st.session_state.chat_session_id}")
     
-    # Save current session button
-    if st.button("💾 Save Current Session"):
-        saved_id = save_current_session()
-        st.success(f"Session saved as: {saved_id}")
-        st.rerun()
-    
-    # Available sessions dropdown
-    available_sessions = st.session_state.available_sessions
-    if available_sessions:
-        selected_session = st.selectbox(
-            "Load Previous Session", 
-            options=available_sessions,
-            format_func=lambda x: f"Session {x}"
-        )
-        
-        if st.button("📂 Load Selected Session"):
-            if load_session_data(selected_session):
-                st.success(f"Loaded session: {selected_session}")
-                st.rerun()
-            else:
-                st.error(f"Failed to load session: {selected_session}")
-    
     # Option to create a new session
-    if st.button("🆕 New Session"):
-        # Save current session before creating a new one
-        save_current_session()
-        
-        # Generate a new session ID
-        new_session_id = f"session_{uuid.uuid4().hex[:8]}"
-        st.session_state.chat_session_id = new_session_id
-        st.session_state.history = []
-        st.session_state.info_messages = []
-        st.session_state.rewritten_query = {"original": "", "rewritten": ""}
-        st.session_state.search_sources = []
-        st.session_state.doc_sources = []
-        st.session_state.vector_store = None
-        st.session_state.processed_documents = []
-        st.success(f"Created new session: {new_session_id}")
+    if st.button("🆕 New Chat"):
+        with st.spinner("Creating chat..."):
+            try:
+                # Create a new session
+                new_session_id = create_new_session(st.session_state)
+                st.success(f"Created new Chat: {new_session_id}")
+                st.rerun()
+            except Exception as e:
+                # Store error in persistent state
+                error_msg = f"Failed to create new Chat: {str(e)}"
+                st.session_state.supabase_errors.append(error_msg)
+                st.rerun()
+    
+    # Display available sessions as clickable items
+    sessions_list, sessions_error = get_available_sessions()
+    if sessions_error:
+        # Store error in persistent state
+        st.session_state.supabase_errors.append(f"Error loading sessions: {sessions_error}")
+        st.session_state.supabase_errors.append("Please check your Supabase connection and try again.")
         st.rerun()
+    else:
+        available_sessions = sessions_list
+        st.session_state.available_sessions = available_sessions
+    
+    if available_sessions:
+        st.write("### Previous Sessions")
+        for session in available_sessions:
+            session_id = session["session_id"]
+            session_name = session["session_name"]
+            # Create a button for each session that loads when clicked
+            if st.button(f"{session_name} ({session_id[:8]}...)", key=f"session_{session_id}"):
+                with st.spinner(f"Loading session '{session_name}'..."):
+                    success = load_session_data(session_id, st.session_state, pinecone_client)
+                    if success:
+                        st.success(f"Loaded session: {session_name}")
+                        st.rerun()
 
 # Clear Chat Button
 if st.sidebar.button("🗑️ Clear Chat History"):
@@ -231,16 +152,25 @@ if st.sidebar.button("🗑️ Clear Chat History"):
     st.session_state.rewritten_query = {"original": "", "rewritten": ""}
     st.session_state.search_sources = []
     st.session_state.doc_sources = []
+    st.session_state.search_images = []
     st.rerun()
 
 # Web Search Configuration
 st.sidebar.header("🌐 Web Search Configuration")
 st.session_state.use_web_search = st.sidebar.checkbox("Enable Google Search", value=st.session_state.use_web_search)
-
-# Set up API keys
 os.environ["GOOGLE_API_KEY"] = st.session_state.google_api_key
 genai.configure(api_key=st.session_state.google_api_key)
 pinecone_client = init_pinecone(st.session_state.pinecone_api_key)
+
+# Display persistent error messages that require user acknowledgment
+if st.session_state.supabase_errors:
+    with st.container():
+        st.error("⚠️ Database Errors")
+        for error in st.session_state.supabase_errors:
+            st.error(error)
+        if st.button("Acknowledge Errors"):
+            st.session_state.supabase_errors = []
+            st.rerun()
 
 # Display chat history (moved to top of app flow)
 for message in st.session_state.history:
@@ -268,6 +198,20 @@ if st.session_state.search_sources:
         for i, link in enumerate(st.session_state.search_sources, 1):
             display_link = format_url_display(link)
             st.write(f"{i}. [{display_link}]({link})")
+
+# Display search images if available
+if st.session_state.search_images:
+    with st.expander("🖼️ Images from search results"):
+        # Display images in columns
+        cols = st.columns(3)
+        for i, img_meta in enumerate(st.session_state.search_images):
+            col_idx = i % 3
+            with cols[col_idx]:
+                try:
+                    st.image(img_meta["url"], caption=img_meta.get("alt_text", ""), use_column_width=True)
+                    st.caption(f"Source: {format_url_display(img_meta['source_page'])}")
+                except Exception:
+                    st.error(f"Failed to load image from {img_meta['url']}")
 
 # Display persistent info messages
 for message in st.session_state.info_messages:
@@ -308,7 +252,7 @@ if uploaded_file:
                     vector_store = create_vector_store(pinecone_client, texts, namespace=session_id)
                 else:
                     vector_store = create_vector_store(pinecone_client, texts, namespace=session_id)
-                    
+
                 st.session_state.vector_store = vector_store
                 st.session_state.session_vector_stores[session_id] = vector_store
                 st.session_state.processed_documents.append(file_name)
@@ -326,7 +270,7 @@ if web_url:
                     vector_store = create_vector_store(pinecone_client, texts, namespace=session_id)
                 else:
                     vector_store = create_vector_store(pinecone_client, texts, namespace=session_id)
-                    
+
                 st.session_state.vector_store = vector_store
                 st.session_state.session_vector_stores[session_id] = vector_store
                 st.session_state.processed_documents.append(web_url)
@@ -368,7 +312,7 @@ with st.form(key="chat_form", clear_on_submit=True):
         st.session_state.force_web_search = force_web_search
         
         # Make sure we have the session's vector store
-        session_vector_store = get_session_vector_store()
+        session_vector_store = get_session_vector_store(pinecone_client, st.session_state)
         if session_vector_store:
             st.session_state.vector_store = session_vector_store
         
@@ -405,8 +349,7 @@ with st.form(key="chat_form", clear_on_submit=True):
             except Exception as e:
                 st.error(f"❌ Error processing URLs: {str(e)}")
                 # Continue with original prompt if URL detection fails
-                
-
+                 
         # Step 1: Rewrite the query for better retrieval (continue with existing code)
         with st.spinner("🤔 Reformulating query..."):
             try:
@@ -475,11 +418,6 @@ with st.form(key="chat_form", clear_on_submit=True):
             (st.session_state.use_web_search and search_intent_detected)
         )
         
-        # Remove redundant debug information
-        # st.session_state.info_messages.append(f"🔄 Web search enabled: {st.session_state.use_web_search}")
-        # st.session_state.info_messages.append(f"🔄 Intent detection result: {search_intent_detected}")
-        # st.session_state.info_messages.append(f"🔄 Using web search: {should_use_web_search}")
-        
         if should_use_web_search:
             with st.spinner("🔍 Searching with Google..."):
                 try:
@@ -496,6 +434,18 @@ with st.form(key="chat_form", clear_on_submit=True):
                         
                         # Save search links for display after rerun
                         st.session_state.search_sources = search_links
+                
+                        # New code: Scrape images from search results
+                        with st.spinner("🖼️ Extracting images from search results..."):
+                            try:
+                                # Limit to first few links for performance
+                                scraped_images = scrape_images_from_search_results(search_links, limit_per_url=5, max_urls=3)
+                                if scraped_images:
+                                    st.session_state.search_images = scraped_images
+                                    st.toast(f"Found {len(scraped_images)} images from search results")
+                            except Exception as e:
+                                st.error(f"❌ Error extracting images: {str(e)}")
+                                st.session_state.search_images = []
                 except Exception as e:
                     st.error(f"❌ Google search error: {str(e)}")
 
@@ -526,6 +476,10 @@ Rewritten Question: {rewritten_query}
                     "role": "assistant",
                     "content": response.content
                 })
+                
+                # Generate and save session title after getting a response
+                save_current_session(st.session_state)
+                
             except Exception as e:
                 st.error(f"❌ Error generating response: {str(e)}")
                 

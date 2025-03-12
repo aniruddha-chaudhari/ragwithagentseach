@@ -45,6 +45,42 @@ def get_rag_agent() -> Agent:
     )
 
 
+def get_session_title_generator() -> Agent:
+    """Initialize a session title generator agent."""
+    return Agent(
+        name="Session Title Generator",
+        model=Gemini(id="gemini-2.0-flash"),
+        instructions="""You are an expert at creating short, concise titles.
+        
+        Your task is to:
+        1. Read the provided user query
+        2. Generate a short, descriptive title (4-5 words maximum)
+        3. Make the title clearly represent the topic or question
+        4. Return ONLY the title without any additional text or explanations
+        
+        """,
+        show_tool_calls=False,
+        markdown=True,
+    )
+
+def generate_session_title(query: str) -> str:
+    """
+    Generate a concise title (4-5 words) based on the user's query.
+    
+    Args:
+        query (str): The user's query to base the title on
+        
+    Returns:
+        str: A concise 4-5 word title
+    """
+    try:
+        title_agent = get_session_title_generator()
+        title = title_agent.run(f"Generate a concise 4-5 word title for this query: {query}").content
+        return title.strip()
+    except Exception as e:
+        print(f"Error generating session title: {e}")
+        return "Untitled Session"
+
 client = genai.Client(api_key="AIzaSyD4lR1WQ1yaZumSFtMVTG_0Y8d0oRy1XhA")
 class UrldetectionResult(BaseModel):
     urls: List[str]
