@@ -28,17 +28,12 @@ from utils.session_manager import (  # Import session management functions
     get_session_vector_store,
     save_current_session,
     load_session_data,
-    create_new_session
+    create_new_session,
+    delete_session
 )
 from search import google_search
 from agents.intentdetectorAgent import detect_google_search_intent
-from document_loader import (
-    prepare_document, 
-    process_pdf, 
-    process_web, 
-    process_image, 
-    scrape_images_from_search_results
-)
+from document_loader import prepare_document, process_pdf, process_web, process_image
 from agents.writeragents import get_query_rewriter_agent, get_rag_agent, test_url_detector, generate_session_title
 
 # Load environment variables
@@ -96,8 +91,6 @@ if 'supabase_errors' not in st.session_state:
     st.session_state.supabase_errors = []
 if 'show_error_container' not in st.session_state:
     st.session_state.show_error_container = False
-if 'search_images' not in st.session_state:
-    st.session_state.search_images = []
 
 
 # Sidebar Configuration
@@ -137,14 +130,33 @@ with st.sidebar.expander("💬 Session Management"):
         for session in available_sessions:
             session_id = session["session_id"]
             session_name = session["session_name"]
+            
+            # Create two columns for each session - one for the button, one for delete
+            col1, col2 = st.columns([0.8, 0.2])
+            
             # Create a button for each session that loads when clicked
-            if st.button(f"{session_name} ({session_id[:8]}...)", key=f"session_{session_id}"):
-                with st.spinner(f"Loading session '{session_name}'..."):
-                    success = load_session_data(session_id, st.session_state, pinecone_client)
-                    if success:
-                        st.success(f"Loaded session: {session_name}")
-                        st.rerun()
-
+            with col1:
+                if st.button(f"{session_name} ({session_id[:8]}...)", key=f"session_{session_id}"):
+                    with st.spinner(f"Loading session '{session_name}'..."):
+                        success = load_session_data(session_id, st.session_state, pinecone_client)
+                        if success:
+                            st.success(f"Loaded session: {session_name}")
+                            st.rerun()
+            
+            # Add a delete button
+            with col2:
+                if st.button("🗑️", key=f"delete_{session_id}", help="Delete this session"):
+                    with st.spinner(f"Deleting session '{session_name}'..."):
+                        success, error = delete_session(session_id)
+                        if success:
+                            # Remove from available sessions
+                            st.session_state.available_sessions = [s for s in st.session_state.available_sessions 
+                                                                  if s["session_id"] != session_id]
+                            st.success(f"Deleted session: {session_name}")
+                            st.rerun()
+                        else:
+                            st.session_state.supabase_errors.append(f"Failed to delete session: {error}")
+                            st.rerun()
 # Clear Chat Button
 if st.sidebar.button("🗑️ Clear Chat History"):
     st.session_state.history = []
@@ -152,7 +164,6 @@ if st.sidebar.button("🗑️ Clear Chat History"):
     st.session_state.rewritten_query = {"original": "", "rewritten": ""}
     st.session_state.search_sources = []
     st.session_state.doc_sources = []
-    st.session_state.search_images = []
     st.rerun()
 
 # Web Search Configuration
@@ -189,7 +200,14 @@ if st.session_state.doc_sources:
                 source_icon = "📄"
             else:
                 source_icon = "🌐"
-            st.write(f"{source_icon} Source {i} from {doc['source_name']}:")
+
+            # Create source name with link for web pages
+            if source_type == "web_page" and "url" in doc:
+                source_display = f"{source_icon} Source {i} from [{doc['source_name']}]({doc['url']})"
+                st.markdown(source_display)
+            else:
+                st.write(f"{source_icon} Source {i} from {doc['source_name']}:")
+
             st.write(doc["content"])
 
 # Show search links if available
@@ -198,20 +216,6 @@ if st.session_state.search_sources:
         for i, link in enumerate(st.session_state.search_sources, 1):
             display_link = format_url_display(link)
             st.write(f"{i}. [{display_link}]({link})")
-
-# Display search images if available
-if st.session_state.search_images:
-    with st.expander("🖼️ Images from search results"):
-        # Display images in columns
-        cols = st.columns(3)
-        for i, img_meta in enumerate(st.session_state.search_images):
-            col_idx = i % 3
-            with cols[col_idx]:
-                try:
-                    st.image(img_meta["url"], caption=img_meta.get("alt_text", ""), use_column_width=True)
-                    st.caption(f"Source: {format_url_display(img_meta['source_page'])}")
-                except Exception:
-                    st.error(f"Failed to load image from {img_meta['url']}")
 
 # Display persistent info messages
 for message in st.session_state.info_messages:
@@ -252,7 +256,7 @@ if uploaded_file:
                     vector_store = create_vector_store(pinecone_client, texts, namespace=session_id)
                 else:
                     vector_store = create_vector_store(pinecone_client, texts, namespace=session_id)
-
+                    
                 st.session_state.vector_store = vector_store
                 st.session_state.session_vector_stores[session_id] = vector_store
                 st.session_state.processed_documents.append(file_name)
@@ -270,7 +274,7 @@ if web_url:
                     vector_store = create_vector_store(pinecone_client, texts, namespace=session_id)
                 else:
                     vector_store = create_vector_store(pinecone_client, texts, namespace=session_id)
-
+                    
                 st.session_state.vector_store = vector_store
                 st.session_state.session_vector_stores[session_id] = vector_store
                 st.session_state.processed_documents.append(web_url)
@@ -401,6 +405,7 @@ with st.form(key="chat_form", clear_on_submit=True):
                     {
                         "source_type": doc.metadata.get("source_type", "unknown"),
                         "source_name": doc.metadata.get("file_name", "unknown"),
+                        "url": doc.metadata.get("url", ""),  # Extract URL from metadata
                         "content": doc.page_content[:200] + "..."
                     }
                     for doc in docs
@@ -434,18 +439,6 @@ with st.form(key="chat_form", clear_on_submit=True):
                         
                         # Save search links for display after rerun
                         st.session_state.search_sources = search_links
-                
-                        # New code: Scrape images from search results
-                        with st.spinner("🖼️ Extracting images from search results..."):
-                            try:
-                                # Limit to first few links for performance
-                                scraped_images = scrape_images_from_search_results(search_links, limit_per_url=5, max_urls=3)
-                                if scraped_images:
-                                    st.session_state.search_images = scraped_images
-                                    st.toast(f"Found {len(scraped_images)} images from search results")
-                            except Exception as e:
-                                st.error(f"❌ Error extracting images: {str(e)}")
-                                st.session_state.search_images = []
                 except Exception as e:
                     st.error(f"❌ Google search error: {str(e)}")
 

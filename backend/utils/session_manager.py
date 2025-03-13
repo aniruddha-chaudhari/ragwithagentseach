@@ -31,6 +31,25 @@ def convert_uuid_to_str(obj):
         return tuple(convert_uuid_to_str(item) for item in obj)
     return obj
 
+def delete_session(session_id: str) -> Tuple[bool, str]:
+    """
+    Delete a session from Supabase
+    
+    Args:
+        session_id: The ID of the session to delete
+        
+    Returns:
+        Tuple[bool, str]: (success, error_message)
+    """
+    try:
+        # Delete the session from Supabase
+        supabase_client.table('sessions').delete().eq('session_id', session_id).execute()
+        return True, ""
+    except Exception as e:
+        error_details = traceback.format_exc()
+        error_message = f"Error deleting session: {str(e)}"
+        return False, error_message
+
 def save_session(session_id: str, session_data: Dict[str, Any]) -> Tuple[bool, str]:
     """
     Save session data to Supabase
