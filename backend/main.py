@@ -2,6 +2,7 @@ import os
 import json
 import tempfile
 import uuid
+import importlib
 from typing import List, Optional, Dict, Any
 from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, BackgroundTasks, Query, Header, Security
@@ -10,20 +11,36 @@ from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, HttpUrl
 from contextlib import asynccontextmanager
 import google.generativeai as genai
+import sys
+from pathlib import Path
 
+# Improve the project path setup
+current_dir = Path(__file__).parent.absolute()
+project_root = current_dir.parent  # This is the teacherassistant directory
+
+# Ensure the paths are properly added to sys.path
+# The order is important - add project root first so it takes precedence
+sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(current_dir))
+# Add parent of project_root to support teacherassistant.backend imports
+sys.path.insert(0, str(project_root.parent))
+
+# Now import the modules
 # Import shared functionality from embedder.py
 from embedder import (
     init_pinecone,
     create_vector_store,
     check_document_relevance,
+    GeminiEmbedder
 )
+from langchain_pinecone import PineconeVectorStore
 
 from search import google_search
 
-# Import document processing functions
+# Import document processing functions using direct imports
 from document_loader import prepare_document, process_pdf, process_web, process_image
 
-# Import agents
+# Import agents using direct imports
 from agents.writeragents import get_query_rewriter_agent, get_rag_agent, test_url_detector, generate_session_title
 
 # Import session management functions
@@ -38,13 +55,16 @@ from utils.session_manager import (
 # Import supabase client
 from utils.supabase_client import initialize_supabase
 
+from agents.intentdetectorAgent import detect_google_search_intent
+
 # Load environment variables
 load_dotenv()
 
 # Get API keys from environment variables with fallbacks
 GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY", "")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY", "")
-API_KEY = os.getenv("API_KEY", "dev-api-key")  # Default API key for development
+API_KEY = os.getenv("API_KEY", "")  # Remove default value to make authentication optional
+API_AUTH_REQUIRED = os.getenv("API_AUTH_REQUIRED", "false").lower() == "true"  # Default to not requiring auth
 
 # Hardcoded similarity threshold
 SIMILARITY_THRESHOLD = 0.7
@@ -62,10 +82,14 @@ app_state = {
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 def get_api_key(api_key: str = Security(api_key_header)):
-    if not API_KEY:  # No API key set, allow access
+    # If authentication is not required or no API key is set, allow all access
+    if not API_AUTH_REQUIRED or not API_KEY:
         return True
+        
+    # If authentication is required and API key is set, validate the provided key
     if api_key == API_KEY:
         return True
+        
     raise HTTPException(
         status_code=403,
         detail="Invalid API key",
@@ -387,7 +411,15 @@ async def get_session_sources(session_id: str):
 # CHAT ENDPOINTS
 @app.post("/chat", response_model=MessageResponse, dependencies=[Depends(get_api_key)])
 async def chat(request: MessageRequest):
-    """Process a chat message and return response"""
+    """
+    Process a chat message and return response
+    
+    This endpoint handles:
+    1. Query rewriting automatically
+    2. Web search when force_web_search=true or when appropriate
+    3. Document retrieval from vector store
+    4. Response generation with all available context
+    """
     prompt = request.content
     force_web_search = request.force_web_search
     session_id = request.session_id or str(uuid.uuid4())
@@ -459,6 +491,7 @@ async def chat(request: MessageRequest):
         # Get vector store for session
         vector_store = get_session_vector_store(session_id)
         
+        # First, try document search if not forcing web search
         if not force_web_search and vector_store:
             # Try document search first
             has_relevant_docs, docs = check_document_relevance(
@@ -485,9 +518,25 @@ async def chat(request: MessageRequest):
                     })
                 session_data["doc_sources"] = doc_sources
         
-        # Use Google search if applicable
+        # Check if we should use web search
         use_web_search = session_data.get("use_web_search", True)
-        if (force_web_search or not context) and use_web_search:
+        search_intent_detected = False
+        
+        # Check if query needs web search based on intent detection
+        try:
+            search_intent_detected = detect_google_search_intent(rewritten_query)
+        except Exception as e:
+            # Fall back to regular behavior if intent detection fails
+            pass
+            
+        # Use Google search if applicable
+        should_use_web_search = (
+            force_web_search or 
+            (not source_docs and use_web_search and search_intent_detected) or
+            (use_web_search and search_intent_detected)
+        )
+        
+        if should_use_web_search:
             search_results, search_links = google_search(rewritten_query)
             if search_results:
                 if context:
@@ -557,41 +606,6 @@ Rewritten Question: {rewritten_query}
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing message: {str(e)}")
-
-@app.post("/chat/rewrite-query", dependencies=[Depends(get_api_key)])
-async def rewrite_query(request: dict):
-    """Rewrite a query for better retrieval"""
-    try:
-        prompt = request.get("query", "")
-        if not prompt:
-            raise HTTPException(status_code=400, detail="Query is required")
-            
-        query_rewriter = get_query_rewriter_agent()
-        rewritten_query = query_rewriter.run(prompt).content
-        
-        return {
-            "original": prompt,
-            "rewritten": rewritten_query
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error rewriting query: {str(e)}")
-
-@app.post("/chat/search", dependencies=[Depends(get_api_key)])
-async def perform_search(request: dict):
-    """Perform a Google search"""
-    try:
-        query = request.get("query", "")
-        if not query:
-            raise HTTPException(status_code=400, detail="Query is required")
-            
-        search_results, search_links = google_search(query)
-        
-        return {
-            "results": search_results,
-            "links": search_links
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error performing search: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
