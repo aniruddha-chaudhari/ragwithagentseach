@@ -28,14 +28,31 @@ export const deleteSession = async (sessionId) => {
 };
 
 // Document processing
-export const processDocument = async (file, sessionId = null) => {
+export const processDocument = async (file, sessionId = null, onProgress = null) => {
   const formData = new FormData();
   formData.append('file', file);
   if (sessionId) {
     formData.append('session_id', sessionId);
   }
-  const response = await api.post('/process/document', formData);
-  return response.data;
+  
+  try {
+    const response = await api.post('/process/document', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 60000, // Extended timeout for large files (60 seconds)
+      onUploadProgress: onProgress ? (progressEvent) => {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        onProgress(percentCompleted);
+      } : undefined
+    });
+    return response.data;
+  } catch (error) {
+    if (error.code === 'ECONNABORTED') {
+      throw new Error('Upload timed out. The file might be too large.');
+    }
+    throw error;
+  }
 };
 
 export const processUrl = async (url, sessionId = null) => {

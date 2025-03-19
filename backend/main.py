@@ -304,37 +304,89 @@ async def process_document(
         session_id = str(uuid.uuid4())
     
     try:
+        # Check file size (10 MB limit)
+        file_size = 0
+        chunk_size = 1024 * 1024  # 1 MB
+        file_content = bytearray()
+        
+        while True:
+            chunk = await file.read(chunk_size)
+            if not chunk:
+                break
+            file_content.extend(chunk)
+            file_size += len(chunk)
+            
+            # Stop if file is too large (over 10MB)
+            if file_size > 10 * 1024 * 1024:
+                raise HTTPException(
+                    status_code=413,
+                    detail="File too large, maximum size is 10 MB"
+                )
+        
+        # Reset file position for reading again
+        await file.seek(0)
+        
+        # Check file type based on extension
+        file_ext = os.path.splitext(file_name)[1].lower()
+        allowed_extensions = ['.pdf', '.png', '.jpg', '.jpeg', '.gif', '.webp']
+        
+        if file_ext not in allowed_extensions:
+            raise HTTPException(
+                status_code=415,
+                detail=f"Unsupported file format: {file_ext}. Supported formats are: PDF, PNG, JPG, JPEG, GIF, WEBP"
+            )
+        
         # Save uploaded file to temp location
-        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file_name)[1]) as temp_file:
-            temp_file.write(await file.read())
+        with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as temp_file:
+            temp_file.write(file_content)
             temp_path = temp_file.name
         
         # Process based on file type
-        file_ext = os.path.splitext(file_name)[1].lower()
-        
-        if file_ext in ['.png', '.jpg', '.jpeg', '.gif', '.webp']:
-            with open(temp_path, 'rb') as f:
-                texts = process_image(f)
-            doc_type = "Image"
-        else:  # PDF or other document types
-            with open(temp_path, 'rb') as f:
-                texts = process_pdf(f)
-            doc_type = "Document"
+        try:
+            if file_ext in ['.png', '.jpg', '.jpeg', '.gif', '.webp']:
+                texts = process_image(temp_path)
+                doc_type = "Image"
+            else:  # PDF or other document types
+                texts = process_pdf(temp_path)
+                doc_type = "Document"
+                
+            # Ensure we got valid text chunks
+            if not texts or len(texts) == 0:
+                raise ValueError("No text content could be extracted from the file")
+                
+            print(f"Successfully processed {doc_type}: {file_name}, extracted {len(texts)} text chunks")
+            
+        except Exception as e:
+            print(f"Error processing {doc_type} content: {str(e)}")
+            os.unlink(temp_path)  # Clean up temp file
+            raise HTTPException(
+                status_code=422, 
+                detail=f"Failed to process {doc_type.lower()} content: {str(e)}"
+            )
             
         # Clean up temp file
         os.unlink(temp_path)
         
+        # Add to vector store
         if texts and app_state["pinecone_client"]:
-            # Get or create vector store for the session
-            vector_store = get_session_vector_store(session_id)
-            if not vector_store:
-                # Create new vector store with session namespace
-                vector_store = create_vector_store(app_state["pinecone_client"], texts, namespace=session_id)
-                app_state["session_vector_stores"][session_id] = vector_store
-            else:
-                # Add to existing vector store
-                vector_store.add_documents(texts)
-            
+            try:
+                # Get or create vector store for the session
+                vector_store = get_session_vector_store(session_id)
+                if not vector_store:
+                    # Create new vector store with session namespace
+                    vector_store = create_vector_store(app_state["pinecone_client"], texts, namespace=session_id)
+                    app_state["session_vector_stores"][session_id] = vector_store
+                else:
+                    # Add to existing vector store
+                    vector_store.add_documents(texts)
+                
+            except Exception as e:
+                print(f"Error adding to vector store: {str(e)}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Failed to add document to vector store: {str(e)}"
+                )
+                
             # Track processed document in session
             processed_documents = [file_name]
             
@@ -351,8 +403,15 @@ async def process_document(
             
             return {"success": True, "sources": processed_documents, "session_id": session_id}
         else:
-            raise HTTPException(status_code=500, detail="Failed to process document")
+            raise HTTPException(status_code=422, detail="No content could be extracted from the document")
+            
+    except HTTPException as e:
+        # Re-raise HTTP exceptions as they already have status_code and detail
+        raise e
     except Exception as e:
+        print(f"Unexpected error processing document: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error processing document: {str(e)}")
 
 @app.post("/process/url", response_model=ProcessResponse, dependencies=[Depends(get_api_key)])

@@ -48,7 +48,7 @@ const SessionDrawer = ({ isOpen, onClose, currentSessionId, onSessionChange, cla
       try {
         await deleteSession(sessionId);
         setSessions(sessions.filter(session => session.session_id !== sessionId));
-
+        
         if (sessionId === currentSessionId) {
           const remainingSessions = sessions.filter(session => session.session_id !== sessionId);
           if (remainingSessions.length > 0) {
@@ -67,17 +67,17 @@ const SessionDrawer = ({ isOpen, onClose, currentSessionId, onSessionChange, cla
   if (!isOpen) return null;
 
   return (
-    <div
+    <div 
       className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
       onClick={onClose}
     >
-      <div
-        className="fixed inset-y-0 left-0 w-80 bg-card shadow-xl z-40 animate-slide-up border-r border-sidebar-border"
+      <div 
+        className="fixed inset-y-0 left-0 w-80 bg-card shadow-xl z-40 animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
           <h2 className="text-xl font-medium">Chats</h2>
-          <button
+          <button 
             onClick={onClose}
             className="p-2 hover:bg-sidebar-accent rounded-full transition-colors"
             aria-label="Close"
@@ -96,17 +96,17 @@ const SessionDrawer = ({ isOpen, onClose, currentSessionId, onSessionChange, cla
             <PenLine size={18} />
             <span>New chat</span>
           </button>
-
+          
           {error && (
             <div className="p-3 bg-red-900/30 border border-red-900/30 text-red-200 rounded-lg text-sm">
               {error}
             </div>
           )}
-
+          
           {/* Chats list */}
           <div className="space-y-1 mt-2">
             <h3 className="text-xs text-sidebar-foreground/70 uppercase font-medium px-2 mb-2">Recent chats</h3>
-
+            
             {loading ? (
               <div className="flex justify-center p-4">
                 <div className="animate-pulse-subtle text-sidebar-foreground/60">Loading...</div>
@@ -116,7 +116,7 @@ const SessionDrawer = ({ isOpen, onClose, currentSessionId, onSessionChange, cla
             ) : (
               <div className="space-y-0.5 max-h-[calc(100vh-180px)] overflow-y-auto pb-4">
                 {sessions.map((session) => (
-                  <div
+                  <div 
                     key={session.session_id}
                     className={`flex items-center justify-between py-2 px-3 rounded-lg cursor-pointer transition-colors ${
                       session.session_id === currentSessionId
