@@ -5,7 +5,7 @@ import SourceViewer from '../components/SourceViewer';
 import AttachModal from '../components/AttachModal';
 import SessionDrawer from '../components/SessionDrawer';
 import { sendMessage, getSession } from '../utils/api';
-import { Menu, FileText, Image, Globe } from 'lucide-react';
+import { Menu, FileText, Image, Globe, Files } from 'lucide-react';
 
 const ChatPage = () => {
   const [currentSessionId, setCurrentSessionId] = useState(null);
@@ -85,6 +85,12 @@ const ChatPage = () => {
     }
   };
 
+  // Add a function to toggle document view in drawer
+  const openSessionDrawerWithDocuments = () => {
+    setIsSessionDrawerOpen(true);
+    // Note: The SessionDrawer component will need to be modified to accept and use this prop
+  };
+
   const showWelcomeScreen = messages.length === 0;
 
   return (
@@ -94,15 +100,31 @@ const ChatPage = () => {
         {/* Header */}
         <header className="bg-card border-b border-border z-10">
           <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-            <button 
-              onClick={() => setIsSessionDrawerOpen(true)}
-              className="p-2 hover:bg-secondary rounded-lg transition-colors cursor-pointer"
-              aria-label="Open chats"
-            >
-              <Menu size={20} />
-            </button>
-            <h1 className="text-lg font-medium">Teacher Assistant</h1>
+            {/* Empty div for spacing instead of the menu button */}
             <div className="w-8" /> {/* Spacer for alignment */}
+            <h1 className="text-lg font-medium">Teacher Assistant</h1>
+            
+            <div className="flex items-center">
+              <button 
+                onClick={() => setIsSessionDrawerOpen(true)}
+                className="p-2 hover:bg-secondary rounded-lg transition-colors cursor-pointer"
+                aria-label="Open chats"
+              >
+                <Menu size={20} />
+              </button>
+              
+              {/* Document display button - only show when documents are present */}
+              {processedDocs.length > 0 && (
+                <button
+                  onClick={openSessionDrawerWithDocuments}
+                  className="ml-1 p-2 hover:bg-secondary rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+                  title="View session documents"
+                >
+                  <Files size={18} />
+                  <span className="text-xs font-medium">{processedDocs.length}</span>
+                </button>
+              )}
+            </div>
           </div>
         </header>
 
@@ -134,10 +156,18 @@ const ChatPage = () => {
                 </div>
               )}
               
-              {/* Processed Documents Info */}
+              {/* Processed Documents Info - Make it more prominent with a button to open drawer */}
               {processedDocs.length > 0 && (
                 <div className="mt-6 p-4 bg-card rounded-lg border border-border/70 max-w-3xl mx-auto">
-                  <h3 className="text-base font-medium mb-3">Processed Documents</h3>
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-base font-medium">Processed Documents</h3>
+                    <button 
+                      onClick={openSessionDrawerWithDocuments}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      View all
+                    </button>
+                  </div>
                   <div className="max-h-40 overflow-y-auto">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {processedDocs.map((doc, index) => (
@@ -183,7 +213,7 @@ const ChatPage = () => {
         className="solid-bg"
       />
 
-      {/* Session Drawer */}
+      {/* Session Drawer - Pass initial tab state */}
       <SessionDrawer
         isOpen={isSessionDrawerOpen}
         onClose={() => setIsSessionDrawerOpen(false)}

@@ -94,6 +94,11 @@ const Index = () => {
         {/* Header */}
         <header className="glass-effect border-b border-white/10 sticky top-0 z-10 shadow-md">
           <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div className="w-8" /> {/* Spacer for alignment */}
+            <h1 className="text-xl font-semibold flex items-center gap-2">
+              <Bot className="text-violet-400" size={20} />
+              <span>Teacher Assistant</span>
+            </h1>
             <button 
               onClick={() => setIsSessionDrawerOpen(true)}
               className="p-2.5 hover:bg-white/5 rounded-lg transition-colors flex items-center gap-2 text-sm"
@@ -102,11 +107,6 @@ const Index = () => {
               <Menu size={18} />
               <span className="hidden sm:inline-block">Conversations</span>
             </button>
-            <h1 className="text-xl font-semibold flex items-center gap-2">
-              <Bot className="text-violet-400" size={20} />
-              <span>Teacher Assistant</span>
-            </h1>
-            <div className="w-8" /> {/* Spacer for alignment */}
           </div>
         </header>
 
