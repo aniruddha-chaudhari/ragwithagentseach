@@ -13,6 +13,8 @@ from utils.curriculum_utils import save_curriculum_step, get_curriculum_step, up
 from utils.supabase_client import initialize_supabase
 # Import the new curriculum modification function
 from agents.writeragents import modify_curriculum
+# Import the detail agent
+from agents.detailagent import generate_step_detail, format_detailed_step_text, StepDetailInput
 
 # Load environment variables
 load_dotenv()
@@ -22,6 +24,8 @@ GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY", "")
 os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 genai.configure(api_key=GOOGLE_API_KEY)
 supabase_client = initialize_supabase()
+
+# Note: generate_roadmap function removed
 
 def process_modification_request(curriculum: CurriculumOverview, user_input: str) -> CurriculumOverview:
     """
@@ -102,19 +106,19 @@ if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 if 'debug_errors' not in st.session_state:
     st.session_state.debug_errors = []
-if 'show_errors' not in st.session_state:
-    st.session_state.show_errors = True
+# Remove the redundant initialization of show_errors in session state
 if 'errors' not in st.session_state:
     st.session_state.errors = []
 
 # Debug error display - place at top so it's always visible
-st.sidebar.checkbox("Show Debug Errors", value=st.session_state.show_errors, key="show_errors")
-if st.session_state.show_errors and st.session_state.debug_errors:
-    st.error("⚠️ DEBUG ERRORS:")
-    for error in st.session_state.debug_errors:
-        st.code(error, language="python")
-    if st.button("Clear Debug Errors"):
-        st.session_state.debug_errors = []
+# Let the checkbox itself manage its state
+if st.sidebar.checkbox("Show Debug Errors", value=True, key="show_errors"):
+    if st.session_state.debug_errors:
+        st.error("⚠️ DEBUG ERRORS:")
+        for error in st.session_state.debug_errors:
+            st.code(error, language="python")
+        if st.button("Clear Debug Errors"):
+            st.session_state.debug_errors = []
 
 # Create an error container at the top of the app
 if st.session_state.errors:
@@ -177,17 +181,102 @@ if st.session_state.curriculum:
     # Display the curriculum
     st.header(st.session_state.curriculum.title)
     
-    with st.expander("Curriculum Overview", expanded=True):
-        # Display overview text
-        st.markdown(st.session_state.formatted_text)
-        
-        # Display a download button for the curriculum
+    # Display overview text without tabs
+    st.markdown(st.session_state.formatted_text)
+    
+    # Create a row of buttons
+    col1, col2 = st.columns(2)
+    
+    # Display download button for the curriculum
+    with col1:
         st.download_button(
             label="Download Curriculum",
             data=st.session_state.formatted_text,
             file_name=f"{st.session_state.curriculum.title.replace(' ', '_')}.md",
             mime="text/markdown"
         )
+    
+    # Display button that triggers detailed content generation
+    with col2:
+        # Remove the dropdown - process all steps without selection
+        if st.button("Generate Detailed Curriculum"):
+            with st.spinner("Generating detailed content for all steps..."):
+                try:
+                    # Process all steps sequentially instead of in parallel
+                    # Initialize detailed_steps in session state if not exists
+                    if 'detailed_steps' not in st.session_state:
+                        st.session_state.detailed_steps = {}
+                    
+                    # Progress indicator  
+                    progress_bar = st.progress(0)
+                    status_text = st.empty()
+                    
+                    # Get all steps
+                    steps = list(enumerate(st.session_state.curriculum.steps))
+                    total_steps = len(steps)
+                    
+                    # Process each step sequentially
+                    for i, (index, step) in enumerate(steps):
+                        try:
+                            status_text.text(f"Processing: {step.title}...")
+                            
+                            # Set up input for detail generator
+                            detail_input = StepDetailInput(
+                                step_title=step.title,
+                                estimated_time=step.estimated_time,
+                                subject=st.session_state.curriculum.title
+                            )
+                            
+                            # Generate detailed content
+                            detailed_step = generate_step_detail(detail_input)
+                            
+                            # Format as text
+                            detailed_text = format_detailed_step_text(detailed_step)
+                            
+                            # Store the results
+                            if detailed_step:
+                                st.session_state.detailed_steps[index] = {
+                                    'step': detailed_step,
+                                    'text': detailed_text
+                                }
+                            
+                            # Update progress
+                            progress_bar.progress((i + 1) / total_steps)
+                            
+                        except Exception as e:
+                            error_details = f"Error processing step {step.title}: {e}\n{traceback.format_exc()}"
+                            st.session_state.debug_errors.append(error_details)
+                    
+                    # Update status when complete
+                    status_text.text("All steps processed successfully!")
+                    progress_bar.progress(1.0)
+                    st.success("Detailed curriculum generated successfully!")
+                    
+                except Exception as e:
+                    error_details = f"Error generating content: {e}\n{traceback.format_exc()}"
+                    st.session_state.debug_errors.append(error_details)
+                    st.error("Failed to generate content. See debug errors for details.")
+    
+    # After generating all content, show dropdown to VIEW different steps
+    if 'detailed_steps' in st.session_state and st.session_state.detailed_steps:
+        st.header("Detailed Step Content")
+        step_titles = [step.title for step in st.session_state.curriculum.steps]
+        selected_step_index = st.selectbox("Select a step to view:", 
+                                          options=range(len(step_titles)), 
+                                          format_func=lambda i: f"{i+1}. {step_titles[i]}")
+        
+        if selected_step_index in st.session_state.detailed_steps:
+            st.markdown(st.session_state.detailed_steps[selected_step_index]['text'])
+            
+            # Add download button for detailed content
+            st.download_button(
+                label="Download Detailed Content",
+                data=st.session_state.detailed_steps[selected_step_index]['text'],
+                file_name=f"{step_titles[selected_step_index].replace(' ', '_')}_detailed.md",
+                mime="text/markdown"
+            )
+
+    # Roadmap-related buttons and display removed
     
     # Chat interface for modifications
     st.header("Curriculum Modifications")
@@ -224,6 +313,10 @@ if st.session_state.curriculum:
                 
                 # Update formatted text
                 st.session_state.formatted_text = format_curriculum_text(updated_curriculum)
+                
+                # Reset roadmap when curriculum is modified
+                if 'roadmap' in st.session_state:
+                    del st.session_state.roadmap
                 
                 # Generate response message listing the changes
                 changes_message = "I've updated the curriculum based on your suggestions:\n\n"

@@ -57,6 +57,19 @@ from utils.supabase_client import initialize_supabase
 
 from agents.intentdetectorAgent import detect_google_search_intent
 
+# Import curriculum service
+from curriculum_service import (
+    CurriculumRequest,
+    CurriculumModificationRequest,
+    CurriculumResponse,
+    StepDetailResponse,
+    generate_curriculum,
+    get_curriculum,
+    modify_curriculum_by_id,
+    generate_curriculum_details,
+    get_step_detail
+)
+
 # Load environment variables
 load_dotenv()
 
@@ -665,6 +678,61 @@ Rewritten Question: {rewritten_query}
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing message: {str(e)}")
+
+# CURRICULUM API ENDPOINTS
+@app.post("/curriculum", response_model=CurriculumResponse, dependencies=[Depends(get_api_key)])
+async def create_curriculum(request: CurriculumRequest):
+    """Generate a new curriculum based on subject, syllabus URL, and time constraint"""
+    try:
+        result = generate_curriculum(request)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating curriculum: {str(e)}")
+
+@app.get("/curriculum/{curriculum_id}", response_model=CurriculumResponse, dependencies=[Depends(get_api_key)])
+async def retrieve_curriculum(curriculum_id: str):
+    """Get a specific curriculum by ID"""
+    try:
+        result = get_curriculum(curriculum_id)
+        return result
+    except Exception as e:
+        if "not found" in str(e):
+            raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error retrieving curriculum: {str(e)}")
+
+@app.put("/curriculum/{curriculum_id}", response_model=CurriculumResponse, dependencies=[Depends(get_api_key)])
+async def update_curriculum(curriculum_id: str, request: CurriculumModificationRequest):
+    """Modify a curriculum based on the modification request"""
+    try:
+        result = modify_curriculum_by_id(curriculum_id, request)
+        return result
+    except Exception as e:
+        if "not found" in str(e):
+            raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error modifying curriculum: {str(e)}")
+
+@app.post("/curriculum/{curriculum_id}/details", response_model=Dict[str, StepDetailResponse], dependencies=[Depends(get_api_key)])
+async def create_curriculum_details(curriculum_id: str):
+    """Generate detailed content for all steps in a curriculum"""
+    try:
+        result = generate_curriculum_details(curriculum_id)
+        # Convert integer keys to strings for JSON serialization
+        return {str(k): v for k, v in result.items()}
+    except Exception as e:
+        if "not found" in str(e):
+            raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error generating curriculum details: {str(e)}")
+
+@app.get("/curriculum/{curriculum_id}/details/{step_index}", response_model=StepDetailResponse, dependencies=[Depends(get_api_key)])
+async def retrieve_step_detail(curriculum_id: str, step_index: int):
+    """Get detailed content for a specific step"""
+    try:
+        result = get_step_detail(curriculum_id, step_index)
+        return result
+    except Exception as e:
+        if "not found" in str(e):
+            raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error retrieving step detail: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

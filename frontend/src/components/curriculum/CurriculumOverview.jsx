@@ -1,0 +1,90 @@
+import React, { useState } from 'react';
+import { CurriculumService } from '../../services/CurriculumService';
+
+const CurriculumOverview = ({ curriculum, onDetailsGenerated, onModificationRequested }) => {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState('');
+  
+  const handleGenerateDetails = async () => {
+    setIsGenerating(true);
+    setError('');
+    
+    try {
+      const details = await CurriculumService.generateCurriculumDetails(curriculum.curriculum_id);
+      if (onDetailsGenerated) {
+        onDetailsGenerated(details);
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to generate curriculum details');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+  
+  const handleDownload = () => {
+    const blob = new Blob([curriculum.formatted_text], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${curriculum.title.replace(/\s+/g, '_')}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+      {error && (
+        <div className="bg-red-500 text-white p-3 rounded mb-4">
+          {error}
+        </div>
+      )}
+      
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold mb-2">{curriculum.title}</h1>
+        <p className="text-gray-300 mb-2">{curriculum.overview}</p>
+        <p className="text-sm text-gray-400">Total Time: {curriculum.total_time}</p>
+      </div>
+      
+      <div className="border-t border-gray-700 my-4 pt-4">
+        <h2 className="text-xl font-semibold mb-3">Learning Steps</h2>
+        
+        <div className="space-y-3">
+          {curriculum.steps.map((step, index) => (
+            <div key={index} className="bg-gray-700 p-3 rounded">
+              <h3 className="font-medium">{index + 1}. {step.title}</h3>
+              <p className="text-sm text-gray-400">Estimated Time: {step.estimated_time}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      <div className="flex flex-wrap gap-3 mt-6">
+        <button
+          onClick={handleDownload}
+          className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded"
+        >
+          Download Curriculum
+        </button>
+        
+        <button
+          onClick={handleGenerateDetails}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
+          disabled={isGenerating}
+        >
+          {isGenerating ? 'Generating...' : 'Generate Detailed Curriculum'}
+        </button>
+        
+        <button
+          onClick={onModificationRequested}
+          className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded"
+        >
+          Modify Curriculum
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default CurriculumOverview;

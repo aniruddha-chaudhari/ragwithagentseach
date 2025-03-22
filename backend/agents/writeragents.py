@@ -79,7 +79,6 @@ def generate_session_title(query: str) -> str:
         title = title_agent.run(f"Generate a concise 4-5 word title for this query: {query}").content
         return title.strip()
     except Exception as e:
-        print(f"Error generating session title: {e}")
         return "Untitled Session"
 
 client = genai.Client(api_key="AIzaSyD4lR1WQ1yaZumSFtMVTG_0Y8d0oRy1XhA")
@@ -134,7 +133,6 @@ def test_url_detector(query: str) -> Dict[str, Any]:
             return UrldetectionResult(urls=[], query=query)
             
     except Exception as e:
-        print(f"Error processing response: {e}")
         return UrldetectionResult(urls=[], query=query)
 
 def get_curriculum_modifier_agent() -> Agent:
@@ -214,6 +212,5 @@ def modify_curriculum(curriculum, user_input: str) -> dict:
         return modified_data
         
     except Exception as e:
-        print(f"Error in modify_curriculum: {str(e)}")
         # Return default data structure if there's an error
         return {"steps": [{"title": step.title, "estimated_time": step.estimated_time} for step in curriculum.steps]}

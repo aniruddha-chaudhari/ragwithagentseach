@@ -1,0 +1,135 @@
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_KEY = import.meta.env.VITE_API_KEY || '';
+
+// Headers with API key
+const headers = {
+  'Content-Type': 'application/json',
+  'X-API-Key': API_KEY
+};
+
+export const CurriculumService = {
+  // Create a new curriculum
+  createCurriculum: async (subject, syllabusUrl = null, timeConstraint = null) => {
+    try {
+      const response = await fetch(`${API_URL}/curriculum`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          subject,
+          syllabus_url: syllabusUrl,
+          time_constraint: timeConstraint
+        })
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to create curriculum');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error creating curriculum:', error);
+      throw error;
+    }
+  },
+  
+  // Get a curriculum by ID
+  getCurriculum: async (curriculumId) => {
+    try {
+      const response = await fetch(`${API_URL}/curriculum/${curriculumId}`, {
+        headers
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to get curriculum');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error getting curriculum:', error);
+      throw error;
+    }
+  },
+  
+  // Modify an existing curriculum
+  modifyCurriculum: async (curriculumId, modificationText) => {
+    try {
+      const response = await fetch(`${API_URL}/curriculum/${curriculumId}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({
+          modification_text: modificationText
+        })
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to modify curriculum');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error modifying curriculum:', error);
+      throw error;
+    }
+  },
+  
+  // Generate detailed content for a curriculum
+  generateCurriculumDetails: async (curriculumId) => {
+    try {
+      const response = await fetch(`${API_URL}/curriculum/${curriculumId}/details`, {
+        method: 'POST',
+        headers
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to generate curriculum details');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error generating curriculum details:', error);
+      throw error;
+    }
+  },
+  
+  // Get details for a specific step
+  getStepDetail: async (curriculumId, stepIndex) => {
+    try {
+      const response = await fetch(`${API_URL}/curriculum/${curriculumId}/details/${stepIndex}`, {
+        headers
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to get step details');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error getting step details:', error);
+      throw error;
+    }
+  },
+  
+  // Generate a roadmap for the curriculum
+  generateRoadmap: async (curriculumId) => {
+    try {
+      const response = await fetch(`${API_URL}/curriculum/${curriculumId}/roadmap`, {
+        headers
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to generate roadmap');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error generating roadmap:', error);
+      throw error;
+    }
+  }
+};
