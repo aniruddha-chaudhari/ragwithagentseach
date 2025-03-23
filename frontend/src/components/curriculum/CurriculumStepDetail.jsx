@@ -28,8 +28,8 @@ const CurriculumStepDetail = ({ stepDetail, stepIndex }) => {
 
   if (!stepDetail) {
     return (
-      <div className="bg-gray-800 p-6 rounded-lg shadow-lg text-center">
-        <p>Select a step to view its details</p>
+      <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-lg text-center">
+        <p className="text-gray-700">Select a step to view its details</p>
       </div>
     );
   }
@@ -58,15 +58,15 @@ const CurriculumStepDetail = ({ stepDetail, stepIndex }) => {
   };
 
   return (
-    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+    <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-lg">
       <div className="flex justify-between items-start mb-4">
-        <h2 className="text-xl font-bold">
+        <h2 className="text-xl font-bold text-gray-800">
           Step {stepIndex + 1}: {stepDetail.step_title}
         </h2>
         <div className="flex space-x-2">
           <button
             onClick={() => setShowRawFormat(!showRawFormat)}
-            className="bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium py-1 px-3 rounded"
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium py-1 px-3 rounded"
           >
             {showRawFormat ? 'Show Formatted' : 'Show Raw'}
           </button>
@@ -85,27 +85,27 @@ const CurriculumStepDetail = ({ stepDetail, stepIndex }) => {
         </div>
       </div>
       
-      <p className="text-sm text-gray-400 mb-4">
+      <p className="text-sm mb-4 text-gray-600">
         Estimated Time: {stepDetail.estimated_time}
       </p>
       
-      <div className="border-t border-gray-700 pt-4">
+      <div className="pt-4 border-t border-gray-200">
         {showRawFormat ? (
-          <pre className="bg-gray-900 p-4 rounded overflow-auto whitespace-pre-wrap text-gray-300 text-sm">
+          <pre className="bg-gray-100 text-gray-800 p-4 rounded overflow-auto whitespace-pre-wrap text-sm">
             {stepDetail.formatted_text}
           </pre>
         ) : (
-          <div className="prose prose-invert prose-headings:text-white prose-p:text-gray-300 prose-a:text-blue-400 prose-code:text-emerald-300 prose-strong:font-bold prose-strong:text-white prose-headings:font-bold max-w-none">
+          <div className="prose prose-gray max-w-none">
             <ReactMarkdown 
               rehypePlugins={[rehypeRaw, rehypeHighlight]} 
               remarkPlugins={[remarkGfm]}
               components={{
-                h1: ({node, ...props}) => <h1 className="text-2xl font-bold my-4" {...props} />,
-                h2: ({node, ...props}) => <h2 className="text-xl font-bold my-3" {...props} />,
-                h3: ({node, ...props}) => <h3 className="text-lg font-bold my-2" {...props} />,
-                strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
+                h1: ({node, ...props}) => <h1 className="text-2xl font-bold my-4 text-gray-800" {...props} />,
+                h2: ({node, ...props}) => <h2 className="text-xl font-bold my-3 text-gray-800" {...props} />,
+                h3: ({node, ...props}) => <h3 className="text-lg font-bold my-2 text-gray-800" {...props} />,
+                strong: ({node, ...props}) => <strong className="font-bold text-gray-800" {...props} />,
                 code: ({node, inline, ...props}) => 
-                  inline ? <code className="bg-gray-700 px-1 rounded" {...props} /> : <code {...props} />
+                  inline ? <code className="bg-gray-200 px-1 rounded" {...props} /> : <code {...props} />
               }}
             >
               {stepDetail.formatted_text}

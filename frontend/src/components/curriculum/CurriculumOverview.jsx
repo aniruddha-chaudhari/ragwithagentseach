@@ -34,7 +34,7 @@ const CurriculumOverview = ({ curriculum, onDetailsGenerated, onModificationRequ
   };
 
   return (
-    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+    <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-lg">
       {error && (
         <div className="bg-red-500 text-white p-3 rounded mb-4">
           {error}
@@ -42,19 +42,19 @@ const CurriculumOverview = ({ curriculum, onDetailsGenerated, onModificationRequ
       )}
       
       <div className="mb-4">
-        <h1 className="text-2xl font-bold mb-2">{curriculum.title}</h1>
-        <p className="text-gray-300 mb-2">{curriculum.overview}</p>
-        <p className="text-sm text-gray-400">Total Time: {curriculum.total_time}</p>
+        <h1 className="text-2xl font-bold mb-2 text-gray-800">{curriculum.title}</h1>
+        <p className="text-gray-700 mb-2">{curriculum.overview}</p>
+        <p className="text-sm text-gray-600">Total Time: {curriculum.total_time}</p>
       </div>
       
-      <div className="border-t border-gray-700 my-4 pt-4">
-        <h2 className="text-xl font-semibold mb-3">Learning Steps</h2>
+      <div className="my-4 pt-4 border-t border-gray-200">
+        <h2 className="text-xl font-semibold mb-3 text-gray-800">Learning Steps</h2>
         
         <div className="space-y-3">
           {curriculum.steps.map((step, index) => (
-            <div key={index} className="bg-gray-700 p-3 rounded">
-              <h3 className="font-medium">{index + 1}. {step.title}</h3>
-              <p className="text-sm text-gray-400">Estimated Time: {step.estimated_time}</p>
+            <div key={index} className="bg-gray-100 p-3 rounded">
+              <h3 className="font-medium text-gray-800">{index + 1}. {step.title}</h3>
+              <p className="text-sm text-gray-600">Estimated Time: {step.estimated_time}</p>
             </div>
           ))}
         </div>

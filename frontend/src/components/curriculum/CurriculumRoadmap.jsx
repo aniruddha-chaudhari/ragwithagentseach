@@ -8,7 +8,7 @@ const CurriculumRoadmap = ({ roadmapData }) => {
     if (roadmapData && mermaidRef.current) {
       mermaid.initialize({
         startOnLoad: true,
-        theme: 'dark',
+        theme: 'default', // Changed from 'dark' to match light theme
         securityLevel: 'loose',
         flowchart: {
           htmlLabels: true
@@ -29,15 +29,15 @@ const CurriculumRoadmap = ({ roadmapData }) => {
 
   if (!roadmapData) {
     return (
-      <div className="bg-gray-800 p-6 rounded-lg shadow-lg text-center">
-        <p>No roadmap data available</p>
+      <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-lg text-center">
+        <p className="text-gray-700">No roadmap data available</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-      <h2 className="text-xl font-bold mb-4">Curriculum Roadmap</h2>
+    <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-lg">
+      <h2 className="text-xl font-bold mb-4 text-gray-800">Curriculum Roadmap</h2>
       <div ref={mermaidRef} className="overflow-auto" id="mermaid-diagram-container"></div>
     </div>
   );

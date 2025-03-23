@@ -6,17 +6,17 @@ function App() {
   const [currentPage, setCurrentPage] = useState('chat')
 
   return (
-    <div className="min-h-screen bg-[#1A1B1E] text-white">
-      <nav className="bg-gray-900 p-4">
+    <div className="min-h-screen bg-white text-gray-900">
+      <nav className="bg-gray-100 p-4 border-b border-gray-200">
         <div className="container mx-auto flex">
           <button 
-            className={`mr-4 px-3 py-1 rounded ${currentPage === 'chat' ? 'bg-blue-600' : 'hover:bg-gray-700'}`}
+            className={`mr-4 px-3 py-1 rounded ${currentPage === 'chat' ? 'bg-blue-600 text-white' : 'bg-white text-gray-800 hover:bg-gray-200'}`}
             onClick={() => setCurrentPage('chat')}
           >
             Chat
           </button>
           <button 
-            className={`mr-4 px-3 py-1 rounded ${currentPage === 'curriculum' ? 'bg-blue-600' : 'hover:bg-gray-700'}`}
+            className={`mr-4 px-3 py-1 rounded ${currentPage === 'curriculum' ? 'bg-blue-600 text-white' : 'bg-white text-gray-800 hover:bg-gray-200'}`}
             onClick={() => setCurrentPage('curriculum')}
           >
             Curriculum

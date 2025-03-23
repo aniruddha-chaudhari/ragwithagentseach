@@ -131,5 +131,24 @@ export const CurriculumService = {
       console.error('Error generating roadmap:', error);
       throw error;
     }
+  },
+  
+  // Get all curricula
+  getAllCurricula: async () => {
+    try {
+      const response = await fetch(`${API_URL}/curriculums`, {
+        headers
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to get curricula');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error getting all curricula:', error);
+      throw error;
+    }
   }
 };

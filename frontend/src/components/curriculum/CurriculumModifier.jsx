@@ -34,8 +34,8 @@ const CurriculumModifier = ({ curriculum, onModified, onCancel }) => {
   };
 
   return (
-    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-      <h2 className="text-xl font-bold mb-4">Modify Curriculum</h2>
+    <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-lg">
+      <h2 className="text-xl font-bold mb-4 text-gray-800">Modify Curriculum</h2>
       
       {error && (
         <div className="bg-red-500 text-white p-3 rounded mb-4">
@@ -44,15 +44,15 @@ const CurriculumModifier = ({ curriculum, onModified, onCancel }) => {
       )}
       
       <div className="mb-4">
-        <h3 className="font-medium text-gray-300 mb-2">Current Curriculum Structure:</h3>
-        <div className="bg-gray-700 p-3 rounded mb-4">
-          <p className="font-medium">{curriculum.title}</p>
-          <p className="text-sm text-gray-400 mb-2">Total Time: {curriculum.total_time}</p>
+        <h3 className="font-medium mb-2 text-gray-700">Current Curriculum Structure:</h3>
+        <div className="bg-gray-100 p-3 rounded mb-4">
+          <p className="font-medium text-gray-800">{curriculum.title}</p>
+          <p className="text-sm mb-2 text-gray-600">Total Time: {curriculum.total_time}</p>
           
           <div className="space-y-1 mt-2">
             {curriculum.steps.map((step, index) => (
               <div key={index}>
-                <p>{index + 1}. {step.title} ({step.estimated_time})</p>
+                <p className="text-gray-800">{index + 1}. {step.title} ({step.estimated_time})</p>
               </div>
             ))}
           </div>
@@ -61,17 +61,17 @@ const CurriculumModifier = ({ curriculum, onModified, onCancel }) => {
       
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">
+          <label className="block text-sm font-medium mb-1 text-gray-700">
             Enter your modification request
           </label>
           <textarea
             value={modificationText}
             onChange={(e) => setModificationText(e.target.value)}
-            className="w-full p-3 bg-gray-700 rounded border border-gray-600 text-white h-40"
+            className="w-full p-3 bg-white border border-gray-300 text-gray-800 rounded h-40"
             placeholder="e.g., Add a section on advanced topics, change the order of topics, etc."
             disabled={isLoading}
           />
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs mt-1 text-gray-600">
             Describe how you'd like to modify the curriculum. Be specific about additions, removals, or changes to the structure.
           </p>
         </div>
@@ -88,7 +88,7 @@ const CurriculumModifier = ({ curriculum, onModified, onCancel }) => {
           <button
             type="button"
             onClick={onCancel}
-            className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded"
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded"
             disabled={isLoading}
           >
             Cancel

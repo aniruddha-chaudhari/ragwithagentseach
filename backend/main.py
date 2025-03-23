@@ -70,6 +70,24 @@ from curriculum_service import (
     get_step_detail
 )
 
+# Import curriculum service with new functions
+from curriculum_service import (
+    CurriculumRequest,
+    CurriculumModificationRequest,
+    CurriculumResponse,
+    StepDetailResponse,
+    CurriculumListResponse,
+    CurriculumCreateRequest,
+    generate_curriculum,
+    get_curriculum,
+    modify_curriculum_by_id,
+    generate_curriculum_details,
+    get_step_detail,
+    get_all_curriculums,
+    create_curriculum,
+    delete_curriculum_by_id
+)
+
 # Load environment variables
 load_dotenv()
 
@@ -679,9 +697,50 @@ Rewritten Question: {rewritten_query}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing message: {str(e)}")
 
-# CURRICULUM API ENDPOINTS
+# CURRICULUM API ENDPOINTS - PLURAL FORM (RECOMMENDED)
+@app.get("/curriculums", response_model=CurriculumListResponse, dependencies=[Depends(get_api_key)])
+async def list_curriculums():
+    """Get a list of all available curriculums"""
+    try:
+        result = get_all_curriculums()
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error listing curriculums: {str(e)}")
+
+@app.post("/curriculums", dependencies=[Depends(get_api_key)])
+async def create_new_curriculum(request: CurriculumCreateRequest):
+    """Create a new empty curriculum"""
+    try:
+        result = create_curriculum(request)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating curriculum: {str(e)}")
+
+@app.get("/curriculums/{curriculum_id}", response_model=CurriculumResponse, dependencies=[Depends(get_api_key)])
+async def get_curriculum_by_id(curriculum_id: str):
+    """Get a specific curriculum by ID"""
+    try:
+        result = get_curriculum(curriculum_id)
+        return result
+    except Exception as e:
+        if "not found" in str(e):
+            raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error retrieving curriculum: {str(e)}")
+
+@app.delete("/curriculums/{curriculum_id}", dependencies=[Depends(get_api_key)])
+async def delete_curriculum(curriculum_id: str):
+    """Delete a specific curriculum"""
+    try:
+        success = delete_curriculum_by_id(curriculum_id)
+        return {"success": success, "message": f"Curriculum {curriculum_id} deleted"}
+    except Exception as e:
+        if "not found" in str(e):
+            raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error deleting curriculum: {str(e)}")
+
+# CURRICULUM API ENDPOINTS - SINGULAR FORM (KEPT FOR BACKWARD COMPATIBILITY)
 @app.post("/curriculum", response_model=CurriculumResponse, dependencies=[Depends(get_api_key)])
-async def create_curriculum(request: CurriculumRequest):
+async def create_curriculum_endpoint(request: CurriculumRequest):
     """Generate a new curriculum based on subject, syllabus URL, and time constraint"""
     try:
         result = generate_curriculum(request)

@@ -30,16 +30,16 @@ const MessageList = ({ messages }) => {
           <div 
             className={`max-w-3xl ${
               message.role === 'user' 
-                ? 'bg-blue-800/30 ml-16 rounded-tr-none shadow-md border-blue-900/30' 
-                : 'bg-zinc-800 mr-16 rounded-tl-none shadow-lg border-zinc-700'
+                ? 'bg-blue-100 ml-16 rounded-tr-none shadow-md border-blue-200' 
+                : 'bg-gray-100 mr-16 rounded-tl-none shadow-lg border-gray-200'
             } p-6 rounded-2xl border`}
           >
             <div className="font-semibold mb-2 text-xs flex items-center gap-2">
               {message.role === 'user' 
-                ? <span className="text-blue-400">You</span> 
-                : <span className="text-amber-300">Assistant</span>}
+                ? <span className="text-blue-700">You</span> 
+                : <span className="text-amber-700">Assistant</span>}
             </div>
-            <div className="prose prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-black/40 prose-pre:border prose-pre:border-white/5 prose-pre:rounded-lg prose-pre:text-sm">
+            <div className="prose max-w-none prose-p:leading-relaxed prose-pre:bg-white prose-pre:border prose-pre:border-gray-200 prose-pre:rounded-lg prose-pre:text-sm text-gray-800">
               <ReactMarkdown>{message.content}</ReactMarkdown>
             </div>
           </div>
