@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CurriculumService } from '../../services/CurriculumService';
+import Spinner from '../ui/Spinner';
 
 const CurriculumModifier = ({ curriculum, onModified, onCancel }) => {
   const [modificationText, setModificationText] = useState('');
@@ -8,25 +9,22 @@ const CurriculumModifier = ({ curriculum, onModified, onCancel }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!modificationText.trim()) {
-      setError('Please enter your modification request');
-      return;
-    }
-    
+    if (!modificationText.trim()) return;
+
     setIsLoading(true);
     setError('');
-    
+
     try {
-      const result = await CurriculumService.modifyCurriculum(
+      const modifiedCurriculum = await CurriculumService.modifyCurriculum(
         curriculum.curriculum_id,
         modificationText
       );
       
       if (onModified) {
-        onModified(result);
+        onModified(modifiedCurriculum);
       }
     } catch (err) {
+      console.error('Error modifying curriculum:', err);
       setError(err.message || 'Failed to modify curriculum');
     } finally {
       setIsLoading(false);
@@ -35,63 +33,62 @@ const CurriculumModifier = ({ curriculum, onModified, onCancel }) => {
 
   return (
     <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-lg">
-      <h2 className="text-xl font-bold mb-4 text-gray-800">Modify Curriculum</h2>
+      <h2 className="text-2xl font-bold mb-4 text-gray-800">Modify Curriculum</h2>
       
       {error && (
-        <div className="bg-red-500 text-white p-3 rounded mb-4">
+        <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded mb-4">
           {error}
         </div>
       )}
       
-      <div className="mb-4">
-        <h3 className="font-medium mb-2 text-gray-700">Current Curriculum Structure:</h3>
-        <div className="bg-gray-100 p-3 rounded mb-4">
-          <p className="font-medium text-gray-800">{curriculum.title}</p>
-          <p className="text-sm mb-2 text-gray-600">Total Time: {curriculum.total_time}</p>
-          
-          <div className="space-y-1 mt-2">
-            {curriculum.steps.map((step, index) => (
-              <div key={index}>
-                <p className="text-gray-800">{index + 1}. {step.title} ({step.estimated_time})</p>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="mb-6">
+        <h3 className="text-xl font-semibold mb-2 text-gray-700">
+          {curriculum.title}
+        </h3>
+        <p className="text-gray-600 mb-2">{curriculum.overview}</p>
       </div>
       
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1 text-gray-700">
-            Enter your modification request
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="modificationText">
+            Modification Instructions
           </label>
           <textarea
+            id="modificationText"
             value={modificationText}
             onChange={(e) => setModificationText(e.target.value)}
-            className="w-full p-3 bg-white border border-gray-300 text-gray-800 rounded h-40"
-            placeholder="e.g., Add a section on advanced topics, change the order of topics, etc."
-            disabled={isLoading}
+            placeholder="Describe how you want to modify the curriculum. E.g., Add a section on async programming, make it more beginner-friendly, etc."
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-40"
+            required
           />
-          <p className="text-xs mt-1 text-gray-600">
-            Describe how you'd like to modify the curriculum. Be specific about additions, removals, or changes to the structure.
-          </p>
         </div>
         
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Modifying...' : 'Apply Modifications'}
-          </button>
-          
+        <div className="flex items-center justify-between">
           <button
             type="button"
             onClick={onCancel}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded"
-            disabled={isLoading}
+            className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           >
             Cancel
+          </button>
+          
+          <button
+            type="submit"
+            disabled={isLoading || !modificationText.trim()}
+            className={`${
+              isLoading || !modificationText.trim()
+                ? 'bg-blue-300 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700'
+            } text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center gap-2`}
+          >
+            {isLoading ? (
+              <>
+                <Spinner size="sm" className="border-white border-t-transparent" />
+                <span>Updating...</span>
+              </>
+            ) : (
+              'Apply Modifications'
+            )}
           </button>
         </div>
       </form>

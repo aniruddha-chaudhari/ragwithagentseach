@@ -34,7 +34,7 @@ from utils.session_manager import (  # Import session management functions
 from search import google_search
 from agents.intentdetectorAgent import detect_google_search_intent
 from document_loader import prepare_document, process_pdf, process_web, process_image
-from agents.writeragents import get_query_rewriter_agent, get_rag_agent, test_url_detector, generate_session_title
+from agents.writeragents import get_query_rewriter_agent, get_rag_agent, test_url_detector, generate_session_title, get_baseline_agent
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -80,6 +80,9 @@ if 'search_sources' not in st.session_state:
     st.session_state.search_sources = []
 if 'doc_sources' not in st.session_state:
     st.session_state.doc_sources = []
+# Add baseline response tracking
+if 'baseline_responses' not in st.session_state:
+    st.session_state.baseline_responses = {}
 # Chat session namespace management
 if 'chat_session_id' not in st.session_state:
     st.session_state.chat_session_id = str(uuid.uuid4())
@@ -184,9 +187,20 @@ if st.session_state.supabase_errors:
             st.rerun()
 
 # Display chat history (moved to top of app flow)
-for message in st.session_state.history:
+for idx, message in enumerate(st.session_state.history):
     with st.chat_message(message["role"]):
         st.write(message["content"])
+        
+        # Display baseline response in expander if it exists for this message
+        if message["role"] == "assistant":
+            # Find the corresponding user message
+            if idx > 0 and st.session_state.history[idx-1]["role"] == "user":
+                # Use a key based on the user's message to look up the baseline response
+                user_msg_key = f"user_msg_{idx-1}"
+                
+                if user_msg_key in st.session_state.baseline_responses:
+                    with st.expander("🧠 See response without external tools"):
+                        st.write(st.session_state.baseline_responses[user_msg_key])
 
 # Display source information right after chat history
 # Show document sources if available
@@ -321,37 +335,64 @@ with st.form(key="chat_form", clear_on_submit=True):
             st.session_state.vector_store = session_vector_store
         
         # Add user message to history
+        user_msg_idx = len(st.session_state.history)
+        user_msg_key = f"user_msg_{user_msg_idx}"
         st.session_state.history.append({"role": "user", "content": prompt})
         
+        # Generate baseline response right away (no external tools)
+        with st.spinner("🧠 Generating baseline response..."):
+            try:
+                baseline_agent = get_baseline_agent()
+                baseline_response = baseline_agent.run(prompt).content
+                
+                # Store baseline response with reference to user message
+                st.session_state.baseline_responses[user_msg_key] = baseline_response
+            except Exception as e:
+                st.error(f"❌ Error generating baseline response: {str(e)}")
+                
         # Process query (the existing logic)
         with st.spinner("🔍 Checking for URLs..."):
             try:
                 url_detector = test_url_detector(prompt)
                 detected_urls = url_detector.urls
                 
-                # Process any detected URLs
+                # Debug information
                 if detected_urls:
-                    st.toast(f"📎 Found {len(detected_urls)} URLs in your query. Processing them...")
+                    st.toast(f"📎 Found {len(detected_urls)} URLs in your query: {', '.join(detected_urls)}")
                     
                     for url in detected_urls:
                         if url not in st.session_state.processed_documents:
-                            with st.spinner(f'Processing URL: {url}...'):
-                                texts = process_web(url)
-                                if texts and pinecone_client:
-                                    # Use session namespace
-                                    session_id = st.session_state.chat_session_id
-                                    if st.session_state.vector_store:
-                                        vector_store = create_vector_store(pinecone_client, texts, namespace=session_id)
-                                    else:
-                                        vector_store = create_vector_store(pinecone_client, texts, namespace=session_id)
+                            try:
+                                with st.spinner(f'Processing URL: {url}...'):
+                                    # Validate URL before processing
+                                    if not (url.startswith('http://') or url.startswith('https://')):
+                                        url = 'https://' + url.lstrip('www.')
                                     
-                                    st.session_state.vector_store = vector_store
-                                    st.session_state.session_vector_stores[session_id] = vector_store
-                                    st.session_state.processed_documents.append(url)
-                                    st.toast(f"✅ Added URL from query: {url}")
+                                    # Log the URL being processed
+                                    print(f"Processing URL: {url}")
+                                    
+                                    texts = process_web(url)
+                                    if texts and len(texts) > 0 and pinecone_client:
+                                        # Use session namespace
+                                        session_id = st.session_state.chat_session_id
+                                        if st.session_state.vector_store:
+                                            vector_store = create_vector_store(pinecone_client, texts, namespace=session_id)
+                                        else:
+                                            vector_store = create_vector_store(pinecone_client, texts, namespace=session_id)
+                                        
+                                        st.session_state.vector_store = vector_store
+                                        st.session_state.session_vector_stores[session_id] = vector_store
+                                        st.session_state.processed_documents.append(url)
+                                        st.toast(f"✅ Added URL from query: {url}")
+                                    else:
+                                        st.warning(f"Could not extract content from URL: {url}")
+                            except Exception as url_process_error:
+                                st.error(f"Error processing URL '{url}': {str(url_process_error)}")
+                else:
+                    print("No URLs detected in query:", prompt)
             
             except Exception as e:
-                st.error(f"❌ Error processing URLs: {str(e)}")
+                st.error(f"❌ Error in URL detection process: {str(e)}")
                 # Continue with original prompt if URL detection fails
                  
         # Step 1: Rewrite the query for better retrieval (continue with existing code)
@@ -415,12 +456,10 @@ with st.form(key="chat_form", clear_on_submit=True):
 
         # Step 3: Use Google search if:
         # 1. Web search is forced ON via toggle, or
-        # 2. No relevant documents found AND web search is enabled AND intent detection suggests it, or
-        # 3. Web search is enabled AND search intent is detected (regardless of documents)
+        # 2. No relevant documents found AND web search is enabled AND intent detection suggests it
         should_use_web_search = (
             st.session_state.force_web_search or 
-            (not docs and st.session_state.use_web_search and search_intent_detected) or
-            (st.session_state.use_web_search and search_intent_detected)
+            (not docs and st.session_state.use_web_search and search_intent_detected)
         )
         
         if should_use_web_search:
@@ -436,6 +475,10 @@ with st.form(key="chat_form", clear_on_submit=True):
                             
                         if st.session_state.force_web_search:
                             st.toast("ℹ️ Using Google search as requested", icon="🌐")
+                        elif docs:
+                            st.toast("ℹ️ Supplementing document results with web search", icon="🌐")
+                        else:
+                            st.toast("ℹ️ No relevant documents found, using web search", icon="🌐")
                         
                         # Save search links for display after rerun
                         st.session_state.search_sources = search_links

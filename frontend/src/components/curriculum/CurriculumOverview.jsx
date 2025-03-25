@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CurriculumService } from '../../services/CurriculumService';
+import Spinner from '../../components/ui/Spinner';
 
 const CurriculumOverview = ({ curriculum, onDetailsGenerated, onModificationRequested }) => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -70,10 +71,17 @@ const CurriculumOverview = ({ curriculum, onDetailsGenerated, onModificationRequ
         
         <button
           onClick={handleGenerateDetails}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded flex items-center gap-2"
           disabled={isGenerating}
         >
-          {isGenerating ? 'Generating...' : 'Generate Detailed Curriculum'}
+          {isGenerating ? (
+            <>
+              <Spinner size="sm" className="border-white border-t-transparent" />
+              <span>Generating...</span>
+            </>
+          ) : (
+            'Generate Detailed Curriculum'
+          )}
         </button>
         
         <button

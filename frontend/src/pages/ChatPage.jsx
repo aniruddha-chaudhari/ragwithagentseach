@@ -4,6 +4,7 @@ import MessageInput from '../components/MessageInput';
 import SourceViewer from '../components/SourceViewer';
 import AttachModal from '../components/AttachModal';
 import SessionDrawer from '../components/SessionDrawer';
+import Spinner from '../components/ui/Spinner';
 import { sendMessage, getSession } from '../utils/api';
 import { Menu, FileText, Image, Globe, Files } from 'lucide-react';
 
@@ -16,6 +17,7 @@ const ChatPage = () => {
   const [processedDocs, setProcessedDocs] = useState([]);
   const [isAttachModalOpen, setIsAttachModalOpen] = useState(false);
   const [isSessionDrawerOpen, setIsSessionDrawerOpen] = useState(false);
+  const [baselineResponses, setBaselineResponses] = useState({});
 
   // Load session data when session changes
   useEffect(() => {
@@ -27,6 +29,14 @@ const ChatPage = () => {
         const sessionData = await getSession(currentSessionId);
         setMessages(sessionData.history || []);
         setProcessedDocs(sessionData.processed_documents || []);
+        
+        // Load baseline responses from session data
+        if (sessionData.baseline_responses) {
+          console.log('Loaded baseline responses:', sessionData.baseline_responses);
+          setBaselineResponses(sessionData.baseline_responses);
+        } else {
+          console.log('No baseline responses in session data');
+        }
       } catch (err) {
         console.error('Failed to load session:', err);
         setError('Failed to load chat data');
@@ -43,6 +53,9 @@ const ChatPage = () => {
 
     // Optimistically add user message
     const userMessage = { role: 'user', content };
+    const userMsgIndex = messages.length;
+    const userMsgKey = `user_msg_${userMsgIndex}`;
+    
     setMessages(prev => [...prev, userMessage]);
     
     setLoading(true);
@@ -54,6 +67,20 @@ const ChatPage = () => {
       // Add assistant response
       const assistantMessage = { role: 'assistant', content: response.content };
       setMessages(prev => [...prev, assistantMessage]);
+      
+      // Check response structure in detail
+      console.log('Response from API:', response);
+      
+      // Update baseline responses if available
+      if (response.baseline_response) {
+        console.log(`Setting baseline response for ${userMsgKey}:`, response.baseline_response);
+        setBaselineResponses(prev => ({
+          ...prev,
+          [userMsgKey]: response.baseline_response
+        }));
+      } else {
+        console.log('No baseline response in API response');
+      }
       
       // Update sources display
       setSources(response.sources || []);
@@ -146,7 +173,20 @@ const ChatPage = () => {
             </div>
           ) : (
             <div className="max-w-6xl mx-auto">
-              <MessageList messages={messages} />
+              <MessageList 
+                messages={messages} 
+                baselineResponses={baselineResponses} 
+              />
+              
+              {/* Loading Spinner - show when loading responses */}
+              {loading && (
+                <div className="flex justify-center items-center my-6 animate-fade-in">
+                  <div className="flex flex-col items-center gap-2">
+                    <Spinner size="lg" />
+                    <p className="text-sm text-gray-600 animate-pulse-subtle">Thinking...</p>
+                  </div>
+                </div>
+              )}
               
               {sources.length > 0 && <SourceViewer sources={sources} />}
               

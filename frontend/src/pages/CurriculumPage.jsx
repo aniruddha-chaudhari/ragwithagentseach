@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { CurriculumService } from '../services/CurriculumService';
 import CurriculumForm from '../components/curriculum/CurriculumForm';
 import CurriculumOverview from '../components/curriculum/CurriculumOverview';
-import CurriculumModifier from '../components/curriculum/CurriculumModifier';
 import CurriculumStepDetail from '../components/curriculum/CurriculumStepDetail';
+import CurriculumModifier from '../components/curriculum/CurriculumModifier';
+import Spinner from '../components/ui/Spinner';
+import { CurriculumService } from '../services/CurriculumService';
 
 const CurriculumPage = () => {
   const [curriculum, setCurriculum] = useState(null);
@@ -14,6 +15,7 @@ const CurriculumPage = () => {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
   const [allCurricula, setAllCurricula] = useState([]);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Fetch all curricula when component mounts
   useEffect(() => {
@@ -109,8 +111,11 @@ const CurriculumPage = () => {
           <div className="mt-10">
             <h2 className="text-2xl font-bold mb-4 text-gray-800">Your Curricula</h2>
             {loading ? (
-              <div className="flex justify-center">
-                <p className="text-gray-500">Loading curricula...</p>
+              <div className="flex justify-center py-10">
+                <div className="flex flex-col items-center gap-2">
+                  <Spinner size="lg" />
+                  <p className="text-gray-500">Loading curricula...</p>
+                </div>
               </div>
             ) : allCurricula.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -183,6 +188,16 @@ const CurriculumPage = () => {
           </div>
           
           {/* Tab content */}
+          {isGenerating && (
+            <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+              <div className="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center">
+                <Spinner size="xl" />
+                <p className="mt-4 text-lg font-medium text-gray-800">Generating curriculum...</p>
+                <p className="text-sm text-gray-500 mt-2">This may take a moment</p>
+              </div>
+            </div>
+          )}
+          
           {activeTab === 'overview' && (
             <CurriculumOverview 
               curriculum={curriculum} 

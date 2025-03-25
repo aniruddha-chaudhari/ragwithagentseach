@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Upload, Search } from 'lucide-react';
+import { Send, Upload, Globe } from 'lucide-react';
 
 const MessageInput = ({ onSendMessage, isLoading, onAttach }) => {
   const [message, setMessage] = useState('');
@@ -69,7 +69,7 @@ const MessageInput = ({ onSendMessage, isLoading, onAttach }) => {
             title={forceWebSearch ? "Web search enabled" : "Enable web search"}
             aria-label={forceWebSearch ? "Disable web search" : "Enable web search"}
           >
-            <Search size={20} className="translate-y-0" />
+            <Globe size={20} className="translate-y-0" />
           </button>
           
           <button

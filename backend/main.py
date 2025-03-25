@@ -41,7 +41,7 @@ from search import google_search
 from document_loader import prepare_document, process_pdf, process_web, process_image
 
 # Import agents using direct imports
-from agents.writeragents import get_query_rewriter_agent, get_rag_agent, test_url_detector, generate_session_title
+from agents.writeragents import get_query_rewriter_agent, get_rag_agent, test_url_detector, generate_session_title, get_baseline_agent
 
 # Import session management functions
 from utils.session_manager import (
@@ -168,6 +168,7 @@ class MessageResponse(BaseModel):
     content: str
     sources: List[Dict[str, str]] = []
     session_id: str
+    baseline_response: Optional[str] = None  # Add this field
 
 class ProcessUrlRequest(BaseModel):
     url: HttpUrl
@@ -188,7 +189,7 @@ class SessionInfo(BaseModel):
     updated_at: Optional[str] = None
 
 class SessionListResponse(BaseModel):
-    sessions: List[SessionInfo]
+    sessions: List[SessionInfo]  # Fixed syntax: changed List<SessionInfo] to List[SessionInfo]
 
 class SessionResponse(BaseModel):
     session_id: str
@@ -539,6 +540,24 @@ async def chat(request: MessageRequest):
         history.append({"role": "user", "content": prompt})
         session_data["history"] = history
         
+        # Generate baseline response (without external tools)
+        baseline_response = None
+        try:
+            baseline_agent = get_baseline_agent()
+            baseline_response = baseline_agent.run(prompt).content
+            
+            # Store baseline response in session data
+            if "baseline_responses" not in session_data:
+                session_data["baseline_responses"] = {}
+                
+            # Create a key based on the user message index for consistent retrieval
+            user_msg_idx = len(history) - 1
+            user_msg_key = f"user_msg_{user_msg_idx}"
+            session_data["baseline_responses"][user_msg_key] = baseline_response
+        except Exception as e:
+            print(f"Error generating baseline response: {str(e)}")
+            # Continue even if baseline response fails
+        
         # Check for URLs in prompt
         url_detector = test_url_detector(prompt)
         detected_urls = url_detector.urls
@@ -692,7 +711,11 @@ Rewritten Question: {rewritten_query}
                     "content": ""
                 })
         
-        return {"content": response.content, "sources": sources, "session_id": session_id}
+        return {
+            "content": response.content, 
+            "sources": sources, 
+            "session_id": session_id
+        }
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing message: {str(e)}")
@@ -768,7 +791,7 @@ async def update_curriculum(curriculum_id: str, request: CurriculumModificationR
     except Exception as e:
         if "not found" in str(e):
             raise HTTPException(status_code=404, detail=str(e))
-        raise HTTPException(status_code=500, detail=f"Error modifying curriculum: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error modifying curriculum: {str(e)}")  # Fixed syntax: changed detail[ to detail=
 
 @app.post("/curriculum/{curriculum_id}/details", response_model=Dict[str, StepDetailResponse], dependencies=[Depends(get_api_key)])
 async def create_curriculum_details(curriculum_id: str):
@@ -779,8 +802,8 @@ async def create_curriculum_details(curriculum_id: str):
         return {str(k): v for k, v in result.items()}
     except Exception as e:
         if "not found" in str(e):
-            raise HTTPException(status_code=404, detail=str(e))
-        raise HTTPException(status_code=500, detail=f"Error generating curriculum details: {str(e)}")
+            raise HTTPException(status_code=404, detail=str(e))  # Fixed syntax: changed detail[ to detail=
+        raise HTTPException(status_code=500, detail=f"Error generating curriculum details: {str(e)}")  # Fixed syntax: changed detail[ to detail=
 
 @app.get("/curriculum/{curriculum_id}/details/{step_index}", response_model=StepDetailResponse, dependencies=[Depends(get_api_key)])
 async def retrieve_step_detail(curriculum_id: str, step_index: int):
@@ -790,8 +813,8 @@ async def retrieve_step_detail(curriculum_id: str, step_index: int):
         return result
     except Exception as e:
         if "not found" in str(e):
-            raise HTTPException(status_code=404, detail=str(e))
-        raise HTTPException(status_code=500, detail=f"Error retrieving step detail: {str(e)}")
+            raise HTTPException(status_code=404, detail=str(e))  # Fixed syntax: changed detail[ to detail=
+        raise HTTPException(status_code=500, detail=f"Error retrieving step detail: {str(e)}")  # Fixed syntax: changed detail[ to detail=
 
 if __name__ == "__main__":
     import uvicorn

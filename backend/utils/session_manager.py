@@ -86,6 +86,7 @@ def save_session(session_id: str, session_data: Dict[str, Any]) -> Tuple[bool, s
                 'search_sources': serializable_data['search_sources'],
                 'doc_sources': serializable_data['doc_sources'],
                 'use_web_search': serializable_data['use_web_search'],
+                'baseline_responses': serializable_data.get('baseline_responses', {}),  # Add baseline responses
                 'updated_at': 'now()'
             }).eq('session_id', db_session_id).execute()
         else:
@@ -99,7 +100,8 @@ def save_session(session_id: str, session_data: Dict[str, Any]) -> Tuple[bool, s
                 'rewritten_query': serializable_data['rewritten_query'],
                 'search_sources': serializable_data['search_sources'],
                 'doc_sources': serializable_data['doc_sources'],
-                'use_web_search': serializable_data['use_web_search']
+                'use_web_search': serializable_data['use_web_search'],
+                'baseline_responses': serializable_data.get('baseline_responses', {}),  # Add baseline responses
             }).execute()
         return True, ""
     except Exception as e:
@@ -195,7 +197,8 @@ def save_current_session(session_state):
         "doc_sources": session_state.doc_sources,
         "use_web_search": session_state.use_web_search,
         "session_id": session_id,
-        "session_name": session_name
+        "session_name": session_name,
+        "baseline_responses": session_state.baseline_responses  # Add baseline responses
     }
     
     success, error_message = save_session(session_id, session_data)
@@ -240,6 +243,8 @@ def load_session_data(session_id, session_state, pinecone_client):
             session_state.search_sources = session_data.get("search_sources", [])
             session_state.doc_sources = session_data.get("doc_sources", [])
             session_state.use_web_search = session_data.get("use_web_search", False)
+            # Load baseline responses
+            session_state.baseline_responses = session_data.get("baseline_responses", {})
             
             # Get vector store for this session
             session_state.vector_store = get_session_vector_store(pinecone_client, session_state)
@@ -279,4 +284,6 @@ def create_new_session(session_state):
     session_state.doc_sources = []
     session_state.vector_store = None
     session_state.processed_documents = []
+    # Clear baseline responses for new session
+    session_state.baseline_responses = {}
     return new_session_id

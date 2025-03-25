@@ -94,7 +94,7 @@ def create_vector_store(pc_client, texts, namespace: Optional[str] = None, curri
         return None
 
 
-def check_document_relevance(query: str, vector_store, threshold: float = 0.7, namespace: Optional[str] = None, curriculum_id: Optional[str] = None) -> Tuple[bool, List[Document]]:
+def check_document_relevance(query: str, vector_store, threshold: float = 0.4, namespace: Optional[str] = None, curriculum_id: Optional[str] = None) -> Tuple[bool, List[Document]]:
     """
     Check if documents in vector store are relevant to the query.
     

@@ -2,8 +2,11 @@ from agno.agent import Agent
 from agno.models.google import Gemini
 from typing import Dict, Any, List
 from pydantic import BaseModel
+from google.genai import types
 from google import genai
 import json  # Add this missing import
+import re  # Add this import at the top of the file
+import logging  # Add this import at the top of the file
 
 def get_query_rewriter_agent() -> Agent:
     """Initialize a query rewriting agent."""
@@ -42,6 +45,27 @@ def get_rag_agent() -> Agent:
         Always maintain high accuracy and clarity in your responses.
         """,
         show_tool_calls=True,
+        markdown=True,
+    )
+
+
+def get_baseline_agent() -> Agent:
+    """Initialize a baseline agent that uses only internal knowledge without external tools."""
+    return Agent(
+        name="Baseline Agent",
+        model=Gemini(id="gemini-2.0-flash"),
+        instructions="""You are an assistant that answers questions using ONLY your internal knowledge.
+        
+        Important instructions:
+        - Do NOT reference any external documents, web searches, or other tools
+        - Begin your response with "Based solely on my internal knowledge:"
+        - Provide the best information you can, but acknowledge limitations when appropriate
+        - If you're unsure or don't have enough information, state this clearly
+        - Do NOT pretend to have current or specialized information you don't possess
+        
+        Your purpose is to demonstrate how AI responds without access to additional information sources.
+        """,
+        show_tool_calls=False,
         markdown=True,
     )
 
@@ -86,54 +110,95 @@ class UrldetectionResult(BaseModel):
     urls: List[str]
     query: str
     
-def test_url_detector(query: str) -> Dict[str, Any]:
+def test_url_detector(query: str) -> UrldetectionResult:
     """
-    Test the URL detector using direct Gemini API call.
+    Detect URLs in a user query using both AI and regex approaches.
     
     Args:
         query (str): The query to test
         
     Returns:
-        Dict[str, Any]: Parsed JSON result with urls list and query fields
+        UrldetectionResult: Object with urls list and query fields
     """
-   
-    prompt = f"""You are an expert at identifying URLs in user queries.
-    
-    Your task is to:
-    1. Analyze the following user input
-    2. Identify ALL URLs present (http, https, or www formats)
-    3. Extract ALL complete URLs and the actual question
-    4. Return a structured JSON response with:
-       - "urls": an array of all extracted URLs (empty array if none found)
-       - "query": the actual question without the URLs
-    
-    If no URLs are detected, return:
-    {{"urls": [], "query": "original question"}}
-    
-    Return ONLY the JSON object without any additional text or explanations.
-    
-    User input: {query}
-    """
-     
+    # First try regex-based URL detection as a fallback
+    url_pattern = re.compile(
+        r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+|'
+        r'www\.(?:[a-zA-Z0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+    )
+    regex_urls = url_pattern.findall(query)
+
     try:
-        # Use the GenerativeModel class instead of Client
-        model = genai.GenerativeModel('gemini-2.0-flash')
-        response = model.generate_content(
-            prompt,
-            generation_config={
-                "response_mime_type": "application/json",
-            }
+        # Use the GenerativeModel class for AI-based detection
+        prompt = f"""You are an expert at identifying URLs in user queries.
+        
+        Your task is to:
+        1. Analyze the following user input
+        2. Identify ALL URLs present (http, https, or www formats)
+        3. Extract ALL complete URLs and the actual question
+        4. Return a structured JSON response with:
+           - "urls": an array of all extracted URLs (empty array if none found)
+           - "query": the actual question without the URLs
+        
+        If no URLs are detected, return:
+        {{"urls": [], "query": "original question"}}
+        
+        Return ONLY the JSON object without any additional text or explanations.
+        
+        User input: {query}
+        """
+         
+        response = client.models.generate_content(
+            model='gemini-2.0-flash',
+            contents=query,
+            config=types.GenerateContentConfig(
+                temperature=0.2,
+                tools=[types.Tool(
+                    google_search=types.GoogleSearchRetrieval()
+                )]
+            )
         )
+        
         
         # Parse the response JSON
         if hasattr(response, 'text'):
-            result_json = json.loads(response.text)
-            return UrldetectionResult(**result_json)
+            try:
+                # Clean the response text in case it has markdown formatting
+                clean_text = response.text
+                if clean_text.startswith("```json"):
+                    clean_text = clean_text[7:]
+                if clean_text.endswith("```"):
+                    clean_text = clean_text[:-3]
+                
+                result_json = json.loads(clean_text.strip())
+                ai_detected = UrldetectionResult(**result_json)
+                
+                # Combine AI and regex results, prioritizing AI detection
+                all_urls = list(set(ai_detected.urls + regex_urls))
+                
+                # Validate URLs (ensure they start with http/https/www)
+                validated_urls = []
+                for url in all_urls:
+                    if url.startswith(('http://', 'https://')):
+                        validated_urls.append(url)
+                    elif url.startswith('www.'):
+                        validated_urls.append('https://' + url)
+                    else:
+                        # Try to fix common URL issues
+                        if re.match(r'^[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+\.?', url):
+                            validated_urls.append('https://' + url)
+                
+                return UrldetectionResult(urls=validated_urls, query=ai_detected.query)
+            except json.JSONDecodeError as e:
+                # Fall back to regex results if JSON parsing fails
+                print(f"JSON parsing error in URL detection: {e}. Raw response: {response.text}")
+                return UrldetectionResult(urls=regex_urls, query=query)
         else:
-            return UrldetectionResult(urls=[], query=query)
+            return UrldetectionResult(urls=regex_urls, query=query)
             
     except Exception as e:
-        return UrldetectionResult(urls=[], query=query)
+        print(f"URL detection error: {str(e)}")
+        # Fall back to regex-based detection on error
+        return UrldetectionResult(urls=regex_urls, query=query)
 
 def get_curriculum_modifier_agent() -> Agent:
     """Initialize an agent for modifying curriculum structure."""
