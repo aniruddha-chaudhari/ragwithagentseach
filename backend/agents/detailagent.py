@@ -160,12 +160,12 @@ def generate_step_detail(input_data: StepDetailInput) -> DetailedStep:
         # Parse JSON
         detail_data = json.loads(response_text.strip())
         
-        # Create and return the detailed step
-        return DetailedStep(
+        # Create the detailed step
+        detailed_step = DetailedStep(
             step_title=input_data.step_title,
             estimated_time=input_data.estimated_time,
             learning_objectives=detail_data.get("learning_objectives", []),
-            subtopics=detail_data.get("subtopics", []),  # Added new field
+            subtopics=detail_data.get("subtopics", []),
             core_concepts=detail_data.get("core_concepts", ""),
             learning_resources=detail_data.get("learning_resources", []),
             practice_exercises=detail_data.get("practice_exercises", []),
@@ -173,6 +173,12 @@ def generate_step_detail(input_data: StepDetailInput) -> DetailedStep:
             advanced_topics=detail_data.get("advanced_topics", []),
             connections=detail_data.get("connections", {})
         )
+        
+        # Print confirmation of generated content
+        print(f"Successfully generated detailed content for step: {input_data.step_title}")
+        print(f"Contains {len(detailed_step.learning_objectives)} learning objectives and {len(detailed_step.subtopics)} subtopics")
+        
+        return detailed_step
     
     except Exception as e:
         print(f"Error generating step detail: {e}\n{traceback.format_exc()}")

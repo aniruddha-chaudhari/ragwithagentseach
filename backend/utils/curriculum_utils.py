@@ -160,3 +160,102 @@ def update_curriculum_step(step_id: str, step_title: str, estimated_time: str, o
     except Exception as e:
         print(f"Error updating curriculum step in Supabase: {e}")
         return False
+
+def save_curriculum_step_detail(detail_id: str, curriculum_id: str, step_index: int, detail_data: Dict[str, Any]) -> bool:
+    """
+    Save detailed curriculum step content to the detailed_content column of curriculum_steps
+    
+    Args:
+        detail_id: Unique identifier for the detailed step content (not used directly)
+        curriculum_id: The curriculum ID this detail belongs to
+        step_index: The index of the step within the curriculum
+        detail_data: The detailed step content data
+        
+    Returns:
+        bool: True if save was successful, False otherwise
+    """
+    try:
+        # Initialize Supabase client
+        supabase = initialize_supabase()
+        if not supabase:
+            print("Failed to initialize Supabase client")
+            return False
+        
+        # First, get the current detailed_content if it exists
+        response = supabase.table("curriculum_steps").select("detailed_content").eq("step_id", curriculum_id).execute()
+        
+        if not response or not response.data or len(response.data) == 0:
+            print(f"Curriculum with ID {curriculum_id} not found")
+            return False
+        
+        # Extract current detailed_content, or create a new object if it doesn't exist
+        current_detailed_content = response.data[0].get("detailed_content", {}) or {}
+        
+        # Add the new step detail into the detailed_content object
+        # Use a string key for step index to ensure consistent JSON format
+        step_key = f"step_{step_index}"
+        current_detailed_content[step_key] = detail_data
+        
+        # Update the curriculum_steps table with the new detailed_content
+        update_data = {
+            "detailed_content": current_detailed_content
+        }
+        
+        update_response = supabase.table("curriculum_steps").update(update_data).eq("step_id", curriculum_id).execute()
+        
+        print(f"Successfully saved detailed content for curriculum {curriculum_id}, step {step_index}")
+        return True
+        
+    except Exception as e:
+        print(f"Error saving curriculum step detail to Supabase: {e}")
+        return False
+
+def get_curriculum_step_detail(detail_id: str) -> Optional[Dict[str, Any]]:
+    """
+    Get detailed curriculum step content from the detailed_content column
+    
+    Args:
+        detail_id: String in format "{curriculum_id}_step_{step_index}"
+        
+    Returns:
+        Optional[Dict[str, Any]]: Detailed step content data or None if not found
+    """
+    try:
+        # Initialize Supabase client
+        supabase = initialize_supabase()
+        if not supabase:
+            print("Failed to initialize Supabase client")
+            return None
+        
+        # Parse the detail_id to extract curriculum_id and step_index
+        parts = detail_id.split("_step_")
+        if len(parts) != 2:
+            print(f"Invalid detail_id format: {detail_id}")
+            return None
+            
+        curriculum_id = parts[0]
+        step_index = parts[1]
+        
+        # Get the curriculum step from Supabase
+        response = supabase.table("curriculum_steps").select("detailed_content").eq("step_id", curriculum_id).execute()
+        
+        if not response or not response.data or len(response.data) == 0:
+            print(f"Curriculum with ID {curriculum_id} not found")
+            return None
+            
+        # Extract the detailed_content
+        detailed_content = response.data[0].get("detailed_content", {}) or {}
+        
+        # Get the specific step data
+        step_key = f"step_{step_index}"
+        step_data = detailed_content.get(step_key)
+        
+        if not step_data:
+            print(f"No detailed content found for step {step_index} in curriculum {curriculum_id}")
+            return None
+            
+        return step_data
+        
+    except Exception as e:
+        print(f"Error getting curriculum step detail from Supabase: {e}")
+        return None

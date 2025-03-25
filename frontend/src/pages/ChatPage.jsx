@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import MessageList from '../components/MessageList';
-import MessageInput from '../components/MessageInput';
-import SourceViewer from '../components/SourceViewer';
-import AttachModal from '../components/AttachModal';
-import SessionDrawer from '../components/SessionDrawer';
+import MessageList from '../components/chatbot/MessageList';
+import MessageInput from '../components/chatbot/MessageInput';
+import SourceViewer from '../components/chatbot/SourceViewer';
+import AttachModal from '../components/chatbot/AttachModal';
+import SessionDrawer from '../components/chatbot/SessionDrawer';
 import Spinner from '../components/ui/Spinner';
 import { sendMessage, getSession } from '../utils/api';
 import { Menu, FileText, Image, Globe, Files } from 'lucide-react';

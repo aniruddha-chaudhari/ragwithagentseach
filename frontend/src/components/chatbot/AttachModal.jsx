@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { X, Upload, Link, AlertCircle, RefreshCw, FileText } from 'lucide-react';
-import { processDocument, processUrl } from '../utils/api';
+import { processDocument, processUrl } from '../../utils/api';
 
 const AttachModal = ({ isOpen, onClose, sessionId, onDocumentProcessed }) => {
   const [url, setUrl] = useState('');

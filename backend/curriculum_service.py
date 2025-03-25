@@ -270,19 +270,60 @@ def generate_curriculum_details(curriculum_id: str) -> Dict[int, StepDetailRespo
             total_time=curriculum_step.get("estimated_time", "Not specified")
         )
         
+        # Check if detailed_content already exists in the curriculum_step
+        detailed_content = curriculum_step.get("detailed_content", {}) or {}
+        
         # Process each step
         detailed_steps = {}
         
         for index, step in enumerate(curriculum.steps):
-            # Set up input for detail generator
-            detail_input = StepDetailInput(
-                step_title=step.title,
-                estimated_time=step.estimated_time,
-                subject=curriculum.title
-            )
+            step_key = f"step_{index}"
+            existing_detail = detailed_content.get(step_key)
             
-            # Generate detailed content
-            detailed_step = generate_step_detail(detail_input)
+            if existing_detail:
+                print(f"Retrieved existing detailed content for step {index}")
+                # Use existing detailed content
+                detailed_step = DetailedStep(
+                    step_title=existing_detail.get("step_title", step.title),
+                    estimated_time=existing_detail.get("estimated_time", step.estimated_time),
+                    learning_objectives=existing_detail.get("learning_objectives", []),
+                    subtopics=existing_detail.get("subtopics", []),
+                    core_concepts=existing_detail.get("core_concepts", ""),
+                    learning_resources=existing_detail.get("learning_resources", []),
+                    practice_exercises=existing_detail.get("practice_exercises", []),
+                    assessment_methods=existing_detail.get("assessment_methods", ""),
+                    advanced_topics=existing_detail.get("advanced_topics", []),
+                    connections=existing_detail.get("connections", {})
+                )
+            else:
+                print(f"Generating new detailed content for step {index}")
+                # Set up input for detail generator
+                detail_input = StepDetailInput(
+                    step_title=step.title,
+                    estimated_time=step.estimated_time,
+                    subject=curriculum.title
+                )
+                
+                # Generate detailed content
+                detailed_step = generate_step_detail(detail_input)
+                
+                # Save the detailed content to curriculum_steps table
+                try:
+                    from utils.curriculum_utils import save_curriculum_step_detail
+                    detail_dict = detailed_step.dict()
+                    detailed_content_key = f"{curriculum_id}_step_{index}"
+                    save_result = save_curriculum_step_detail(
+                        detailed_content_key,
+                        curriculum_id,
+                        index,
+                        detail_dict
+                    )
+                    if save_result:
+                        print(f"Successfully saved detailed content for step {index}")
+                    else:
+                        print(f"Failed to save detailed content for step {index}")
+                except Exception as e:
+                    print(f"Error saving detailed content: {e}")
             
             # Format as text
             detailed_text = format_detailed_step_text(detailed_step)
@@ -314,14 +355,64 @@ def get_step_detail(curriculum_id: str, step_index: int) -> StepDetailResponse:
         StepDetailResponse with the detailed step content
     """
     try:
-        # Get all details
-        all_details = generate_curriculum_details(curriculum_id)
+        # Get the curriculum with detailed content
+        curriculum_step = get_curriculum_step(curriculum_id)
         
-        # Check if the requested step exists
-        if step_index not in all_details:
-            raise Exception(f"Step with index {step_index} not found in curriculum {curriculum_id}")
+        if not curriculum_step:
+            raise Exception(f"Curriculum with ID {curriculum_id} not found")
         
-        return all_details[step_index]
+        # Check if detailed content exists in the curriculum_step
+        detailed_content = curriculum_step.get("detailed_content", {}) or {}
+        step_key = f"step_{step_index}"
+        existing_detail = detailed_content.get(step_key)
+        
+        if existing_detail:
+            print(f"Retrieved existing detailed content for step {step_index}")
+            
+            # Parse curriculum data to get step title
+            overview_data = curriculum_step.get("overview", {})
+            step_data = overview_data.get("topics", [])
+            
+            if step_index >= len(step_data):
+                raise Exception(f"Step index {step_index} out of range for curriculum {curriculum_id}")
+            
+            step_title = step_data[step_index].get("name", "Unknown step")
+            estimated_time = "Not specified"
+            
+            # Create DetailedStep from stored data
+            detailed_step = DetailedStep(
+                step_title=existing_detail.get("step_title", step_title),
+                estimated_time=existing_detail.get("estimated_time", estimated_time),
+                learning_objectives=existing_detail.get("learning_objectives", []),
+                subtopics=existing_detail.get("subtopics", []),
+                core_concepts=existing_detail.get("core_concepts", ""),
+                learning_resources=existing_detail.get("learning_resources", []),
+                practice_exercises=existing_detail.get("practice_exercises", []),
+                assessment_methods=existing_detail.get("assessment_methods", ""),
+                advanced_topics=existing_detail.get("advanced_topics", []),
+                connections=existing_detail.get("connections", {})
+            )
+            
+            # Format as text
+            detailed_text = format_detailed_step_text(detailed_step)
+            
+            # Return the response
+            return StepDetailResponse(
+                step_title=detailed_step.step_title,
+                estimated_time=detailed_step.estimated_time,
+                content=detailed_step.dict(),
+                formatted_text=detailed_text
+            )
+        else:
+            print(f"No existing detail found for step {step_index}, will generate new content")
+            # If we don't have stored content, generate all details
+            all_details = generate_curriculum_details(curriculum_id)
+            
+            # Check if the requested step exists
+            if step_index not in all_details:
+                raise Exception(f"Step with index {step_index} not found in curriculum {curriculum_id}")
+            
+            return all_details[step_index]
     except Exception as e:
         error_details = f"Error retrieving step detail: {e}\n{traceback.format_exc()}"
         print(error_details)

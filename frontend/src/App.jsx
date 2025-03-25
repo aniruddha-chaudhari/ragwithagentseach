@@ -1,32 +1,28 @@
 import React, { useState } from 'react'
 import ChatPage from './pages/ChatPage'
 import CurriculumPage from './pages/CurriculumPage'
+import Sidebar from './components/Sidebar'
 
 function App() {
   const [currentPage, setCurrentPage] = useState('chat')
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="flex min-h-screen bg-white text-gray-900">
+      <Sidebar 
+        currentPage={currentPage} 
+        setCurrentPage={setCurrentPage} 
+        isOpen={sidebarOpen} 
+        toggleSidebar={toggleSidebar} 
+      />
       
-      <nav className="bg-gray-100 p-4 border-b border-gray-200">
-        <div className="container mx-auto flex">
-          <button 
-            className={`mr-4 px-3 py-1 rounded ${currentPage === 'chat' ? 'bg-blue-600 text-white' : 'bg-white text-gray-800 hover:bg-gray-200'}`}
-            onClick={() => setCurrentPage('chat')}
-          >
-            Chat
-          </button>
-          <button 
-            className={`mr-4 px-3 py-1 rounded ${currentPage === 'Curriculum' ? 'bg-blue-600 text-white' : 'bg-white text-gray-800 hover:bg-gray-200'}`}
-            onClick={() => setCurrentPage('Curriculum')}
-          >
-            Curriculum
-          </button>
+      <div className="flex-1 flex flex-col">
+        <div className="flex-1 overflow-auto">
+          {currentPage === 'chat' ? <ChatPage /> : <CurriculumPage />}
         </div>
-      </nav>
-      
-      {currentPage === 'chat' ? <ChatPage /> : <CurriculumPage />}
-      {/* <ChatPage /> */}
+      </div>
     </div>
   )
 }

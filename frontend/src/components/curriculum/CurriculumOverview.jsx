@@ -60,6 +60,16 @@ const CurriculumOverview = ({ curriculum, onDetailsGenerated, onModificationRequ
           ))}
         </div>
       </div>
+
+      {/* Add a more visible instruction for generating step details */}
+      {curriculum.steps.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+          <p className="text-blue-800">
+            <strong>Next Step:</strong> Click "Generate Details" to create comprehensive content for each step.
+            After generation, you can view step details in the "Step Details" tab.
+          </p>
+        </div>
+      )}
       
       <div className="flex flex-wrap gap-3 mt-6">
         <button

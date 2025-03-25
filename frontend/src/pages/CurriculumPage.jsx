@@ -57,13 +57,69 @@ const CurriculumPage = () => {
       const loadedCurriculum = await CurriculumService.getCurriculum(curriculumId);
       setCurriculum(loadedCurriculum);
       setActiveTab('overview');
+      
+      // Reset states
       setDetailedSteps({});
       setSelectedStepIndex(null);
+      
+      // Check if this curriculum has any step details already generated
+      // by trying to fetch the first step's details
+      if (loadedCurriculum.steps && loadedCurriculum.steps.length > 0) {
+        try {
+          const firstStepDetail = await CurriculumService.getStepDetail(curriculumId, 0);
+          if (firstStepDetail) {
+            // Store the first step's details
+            setDetailedSteps({ 0: firstStepDetail });
+            // Optionally, you can set the selected step and change to details tab
+            // setSelectedStepIndex(0);
+            // setActiveTab('details');
+          }
+        } catch (detailErr) {
+          // It's okay if there are no details yet, this is not a critical error
+          console.log("No step details found, they can be generated later");
+        }
+      }
     } catch (err) {
       console.error('Error loading curriculum:', err);
       setError(`Failed to load curriculum: ${err.message}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Improved function to fetch individual step details
+  const fetchStepDetail = async (curriculumId, stepIndex) => {
+    if (!curriculumId) return;
+    
+    try {
+      setLoading(true);
+      console.log(`Fetching details for step ${stepIndex} of curriculum ${curriculumId}`);
+      const stepDetail = await CurriculumService.getStepDetail(curriculumId, stepIndex);
+      
+      console.log("Step detail fetched successfully:", stepDetail);
+      
+      // Update the detailed steps with this specific step
+      setDetailedSteps(prev => ({
+        ...prev,
+        [stepIndex]: stepDetail
+      }));
+      
+      setError('');
+    } catch (err) {
+      console.error(`Failed to fetch details for step ${stepIndex}:`, err);
+      setError(`Failed to load step details: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle step selection with better error handling
+  const handleStepSelect = (index) => {
+    setSelectedStepIndex(index);
+    
+    // Fetch step details if we don't already have them
+    if (!detailedSteps[index] && curriculum) {
+      fetchStepDetail(curriculum.curriculum_id, index);
     }
   };
 
@@ -88,6 +144,24 @@ const CurriculumPage = () => {
     if (firstIndex) {
       setSelectedStepIndex(parseInt(firstIndex));
       setActiveTab('details');
+    }
+  };
+
+  // Update handle tab switching to try fetching the first step's details if needed
+  const handleTabChange = (tab) => {
+    if (tab === 'details') {
+      // If we're switching to details tab but don't have any step details yet,
+      // try to fetch the first step's details
+      if (Object.keys(detailedSteps).length === 0 && curriculum && curriculum.steps && curriculum.steps.length > 0) {
+        fetchStepDetail(curriculum.curriculum_id, 0);
+        setSelectedStepIndex(0); // Select the first step
+      } else if (selectedStepIndex === null && Object.keys(detailedSteps).length > 0) {
+        // If we have details but no step selected, select the first one we have
+        setSelectedStepIndex(parseInt(Object.keys(detailedSteps)[0]));
+      }
+      setActiveTab(tab);
+    } else {
+      setActiveTab(tab);
     }
   };
 
@@ -163,7 +237,7 @@ const CurriculumPage = () => {
                   ? 'border-b-2 border-blue-500 text-blue-500' 
                   : 'text-gray-600 hover:text-gray-900'
               }`}
-              onClick={() => setActiveTab('overview')}
+              onClick={() => handleTabChange('overview')}
             >
               Overview
             </button>
@@ -173,8 +247,7 @@ const CurriculumPage = () => {
                   ? 'border-b-2 border-blue-500 text-blue-500' 
                   : 'text-gray-600 hover:text-gray-900'
               }`}
-              onClick={() => setActiveTab('details')}
-              disabled={Object.keys(detailedSteps).length === 0}
+              onClick={() => handleTabChange('details')}
             >
               Step Details
             </button>
@@ -211,24 +284,28 @@ const CurriculumPage = () => {
               {/* Step selector sidebar */}
               <div className="bg-white border border-gray-200 p-4 rounded-lg shadow-lg">
                 <h3 className="font-bold text-lg mb-3 text-gray-800">Steps</h3>
-                <div className="space-y-2">
-                  {curriculum.steps.map((step, index) => (
-                    <button
-                      key={index}
-                      className={`block w-full text-left p-2 rounded ${
-                        selectedStepIndex === index 
-                          ? 'bg-blue-600 text-white' 
-                          : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
-                      }`}
-                      onClick={() => setSelectedStepIndex(index)}
-                    >
-                      <p className="font-medium truncate">{index + 1}. {step.title}</p>
-                      <p className={`text-xs ${selectedStepIndex === index ? 'text-gray-200' : 'text-gray-500'}`}>
-                        {step.estimated_time}
-                      </p>
-                    </button>
-                  ))}
-                </div>
+                {curriculum.steps.length > 0 ? (
+                  <div className="space-y-2">
+                    {curriculum.steps.map((step, index) => (
+                      <button
+                        key={index}
+                        className={`block w-full text-left p-2 rounded ${
+                          selectedStepIndex === index 
+                            ? 'bg-blue-600 text-white' 
+                            : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
+                        }`}
+                        onClick={() => handleStepSelect(index)}
+                      >
+                        <p className="font-medium truncate">{index + 1}. {step.title}</p>
+                        <p className={`text-xs ${selectedStepIndex === index ? 'text-gray-200' : 'text-gray-500'}`}>
+                          {step.estimated_time}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-sm">No steps available</p>
+                )}
               </div>
               
               {/* Step detail content */}
@@ -236,6 +313,7 @@ const CurriculumPage = () => {
                 <CurriculumStepDetail 
                   stepDetail={detailedSteps[selectedStepIndex]} 
                   stepIndex={selectedStepIndex}
+                  isLoading={loading}
                 />
               </div>
             </div>

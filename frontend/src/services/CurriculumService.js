@@ -95,19 +95,23 @@ export const CurriculumService = {
     }
   },
   
-  // Get details for a specific step
+  // Get details for a specific step - with better logging
   getStepDetail: async (curriculumId, stepIndex) => {
     try {
+      console.log(`Calling API to get step detail: /curriculum/${curriculumId}/details/${stepIndex}`);
       const response = await fetch(`${API_URL}/curriculum/${curriculumId}/details/${stepIndex}`, {
         headers
       });
       
       if (!response.ok) {
         const error = await response.json();
+        console.error('Error response from API:', error);
         throw new Error(error.detail || 'Failed to get step details');
       }
       
-      return await response.json();
+      const data = await response.json();
+      console.log('Step detail data received:', data);
+      return data;
     } catch (error) {
       console.error('Error getting step details:', error);
       throw error;

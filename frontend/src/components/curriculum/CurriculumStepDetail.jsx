@@ -3,8 +3,9 @@ import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
+import Spinner from '../ui/Spinner'; // Add import for Spinner component
 
-const CurriculumStepDetail = ({ stepDetail, stepIndex }) => {
+const CurriculumStepDetail = ({ stepDetail, stepIndex, isLoading }) => {
   const [showRawFormat, setShowRawFormat] = useState(false);
   const [copySuccess, setCopySuccess] = useState('');
   
@@ -25,6 +26,17 @@ const CurriculumStepDetail = ({ stepDetail, stepIndex }) => {
       return () => clearTimeout(timer);
     }
   }, [copySuccess]);
+
+  if (isLoading) {
+    return (
+      <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-lg flex justify-center items-center min-h-[300px]">
+        <div className="flex flex-col items-center gap-3">
+          <Spinner size="lg" />
+          <p className="text-gray-600">Loading step details...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!stepDetail) {
     return (

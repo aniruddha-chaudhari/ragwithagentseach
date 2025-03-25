@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, PenLine, Trash2 } from 'lucide-react';
-import { getSessions, createSession, deleteSession } from '../utils/api';
+import { getSessions, createSession, deleteSession } from '../../utils/api';
 
 const SessionDrawer = ({ isOpen, onClose, currentSessionId, onSessionChange, className }) => {
   const [sessions, setSessions] = useState([]);
