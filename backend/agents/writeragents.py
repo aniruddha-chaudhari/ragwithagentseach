@@ -4,9 +4,19 @@ from typing import Dict, Any, List
 from pydantic import BaseModel
 from google.genai import types
 from google import genai
-import json  # Add this missing import
-import re  # Add this import at the top of the file
-import logging  # Add this import at the top of the file
+import json
+import re
+import logging
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Get API key from environment variables
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if not GEMINI_API_KEY:
+    logging.warning("GEMINI_API_KEY not found in environment variables")
 
 def get_query_rewriter_agent() -> Agent:
     """Initialize a query rewriting agent."""
@@ -105,7 +115,7 @@ def generate_session_title(query: str) -> str:
     except Exception as e:
         return "Untitled Session"
 
-client = genai.Client(api_key="AIzaSyD4lR1WQ1yaZumSFtMVTG_0Y8d0oRy1XhA")
+client = genai.Client(api_key=GEMINI_API_KEY)
 class UrldetectionResult(BaseModel):
     urls: List[str]
     query: str
