@@ -8,8 +8,7 @@ import Spinner from '../components/ui/Spinner';
 import { sendMessage, getSession } from '../utils/api';
 import { Menu, FileText, Image, Globe, Files } from 'lucide-react';
 
-const ChatPage = () => {
-  const [currentSessionId, setCurrentSessionId] = useState(null);
+const ChatPage = ({ currentSessionId, setCurrentSessionId }) => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -18,6 +17,7 @@ const ChatPage = () => {
   const [isAttachModalOpen, setIsAttachModalOpen] = useState(false);
   const [isSessionDrawerOpen, setIsSessionDrawerOpen] = useState(false);
   const [baselineResponses, setBaselineResponses] = useState({});
+  const [initialDrawerTab, setInitialDrawerTab] = useState('chats');
 
   // Load session data when session changes
   useEffect(() => {
@@ -114,8 +114,8 @@ const ChatPage = () => {
 
   // Add a function to toggle document view in drawer
   const openSessionDrawerWithDocuments = () => {
+    setInitialDrawerTab('documents');
     setIsSessionDrawerOpen(true);
-    // Note: The SessionDrawer component will need to be modified to accept and use this prop
   };
 
   const showWelcomeScreen = messages.length === 0;
@@ -256,9 +256,13 @@ const ChatPage = () => {
       {/* Session Drawer - Pass initial tab state */}
       <SessionDrawer
         isOpen={isSessionDrawerOpen}
-        onClose={() => setIsSessionDrawerOpen(false)}
+        onClose={() => {
+          setIsSessionDrawerOpen(false);
+          setInitialDrawerTab('chats'); // Reset to default tab on close
+        }}
         currentSessionId={currentSessionId}
         onSessionChange={setCurrentSessionId}
+        initialTab={initialDrawerTab}
         className="light-bg"
       />
     </div>

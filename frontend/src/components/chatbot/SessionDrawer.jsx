@@ -2,14 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { X, PenLine, Trash2, FileText, Image, Globe, Layers } from 'lucide-react';
 import { getSessions, createSession, deleteSession, getSession } from '../../utils/api';
 
-const SessionDrawer = ({ isOpen, onClose, currentSessionId, onSessionChange, className }) => {
+const SessionDrawer = ({ 
+  isOpen, 
+  onClose, 
+  currentSessionId, 
+  onSessionChange, 
+  initialTab = 'chats', 
+  className 
+}) => {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const [activeTab, setActiveTab] = useState('chats');
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [sessionDocuments, setSessionDocuments] = useState([]);
   const [loadingDocuments, setLoadingDocuments] = useState(false);
+
+  // Set active tab when initialTab prop changes
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   useEffect(() => {
     if (isOpen) {
