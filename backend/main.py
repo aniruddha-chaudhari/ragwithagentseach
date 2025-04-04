@@ -714,7 +714,8 @@ Rewritten Question: {rewritten_query}
         return {
             "content": response.content, 
             "sources": sources, 
-            "session_id": session_id
+            "session_id": session_id,
+            "baseline_response": baseline_response  # Add the baseline response to the API response
         }
         
     except Exception as e:
