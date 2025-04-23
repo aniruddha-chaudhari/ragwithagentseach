@@ -14,5 +14,5 @@ google-generativeai==0.8.4
 pinecone-client==2.2.1
 
 # Reduce LangChain footprint - only use needed components
-langchain-core==0.1.1
+langchain-core==0.2.43
 langchain-pinecone==0.1.2
