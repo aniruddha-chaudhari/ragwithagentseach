@@ -1,12 +1,18 @@
-supabase==1.0.3
+# Core API framework
 fastapi==0.104.1
+uvicorn[standard]==0.23.2
+
+# Database and environment
+supabase==1.0.3
 python-dotenv==1.0.0
-google-generativeai>=0.4.0
-google-genai
-pinecone
-langchain>=0.1.0
-langchain_pinecone>=0.1.2
-langchain-community>=0.1.0
-agno==0.1.1
 pydantic==2.4.2
-bs4==0.0.1
+
+# AI capabilities - choose only what you need
+google-generativeai==0.4.0
+
+# Vector database - consider using hosted API instead
+pinecone-client==2.2.1
+
+# Reduce LangChain footprint - only use needed components
+langchain-core==0.1.1
+langchain-pinecone==0.1.2

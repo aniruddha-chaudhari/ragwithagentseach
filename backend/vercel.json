@@ -4,8 +4,7 @@
             "src": "main.py",
             "use": "@vercel/python",
             "config": {
-                "excludeFiles": "**/*.ipynb **/*.log **/__pycache__/** **/test.py",
-                "pythonVersion": "3.10"
+"excludeFiles": "**/*.ipynb **/*.log **/__pycache__/** **/test.py **/*.pdf **/ai5.pdf **/test.py .git/**",                "pythonVersion": "3.10"
             }
         }
     ],
