@@ -8,7 +8,7 @@ python-dotenv==1.0.0
 pydantic==2.4.2
 
 # AI capabilities - choose only what you need
-google-generativeai==0.4.0
+google-generativeai==0.8.4
 
 # Vector database - consider using hosted API instead
 pinecone-client==2.2.1
