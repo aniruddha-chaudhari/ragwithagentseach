@@ -1,127 +1,139 @@
-import React, { useState, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
-import remarkGfm from 'remark-gfm';
-import rehypeHighlight from 'rehype-highlight';
-import Spinner from '../ui/Spinner'; // Add import for Spinner component
+import React from 'react';
 
-const CurriculumStepDetail = ({ stepDetail, stepIndex, isLoading }) => {
-  const [showRawFormat, setShowRawFormat] = useState(false);
-  const [copySuccess, setCopySuccess] = useState('');
-  
-  useEffect(() => {
-    // Log raw data for debugging
-    if (stepDetail) {
-      console.log("Raw step detail data:", stepDetail);
-      console.log("Formatted text content:", stepDetail.formatted_text);
-    }
-  }, [stepDetail]);
-
-  // Clear copy success message after 2 seconds
-  useEffect(() => {
-    if (copySuccess) {
-      const timer = setTimeout(() => {
-        setCopySuccess('');
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [copySuccess]);
-
-  if (isLoading) {
+const CurriculumStepDetail = ({ step }) => {
+  if (!step) {
     return (
-      <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-lg flex justify-center items-center min-h-[300px]">
-        <div className="flex flex-col items-center gap-3">
-          <Spinner size="lg" />
-          <p className="text-gray-600">Loading step details...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!stepDetail) {
-    return (
-      <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-lg text-center">
+      <div className="w-full max-w-4xl mx-auto bg-white border border-gray-200 rounded-lg shadow-lg p-6 text-center">
         <p className="text-gray-700">Select a step to view its details</p>
       </div>
     );
   }
 
-  const handleDownload = () => {
-    const blob = new Blob([stepDetail.formatted_text], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${stepDetail.step_title.replace(/\s+/g, '_')}.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(stepDetail.formatted_text)
-      .then(() => {
-        setCopySuccess('Copied!');
-      })
-      .catch(err => {
-        console.error('Failed to copy text: ', err);
-        setCopySuccess('Failed to copy');
-      });
+  // Helper function to render content with markdown-like formatting
+  const renderContent = (content) => {
+    if (!content) return null;
+    
+    // Split by newlines and process each line
+    return content.split('\n').map((line, index) => {
+      // Headers
+      if (line.startsWith('# ')) {
+        return <h2 key={index} className="text-xl font-bold mt-4 mb-2">{line.substring(2)}</h2>;
+      } else if (line.startsWith('## ')) {
+        return <h3 key={index} className="text-lg font-semibold mt-3 mb-2">{line.substring(3)}</h3>;
+      } else if (line.startsWith('### ')) {
+        return <h4 key={index} className="text-md font-semibold mt-3 mb-1">{line.substring(4)}</h4>;
+      }
+      
+      // Lists
+      else if (line.startsWith('- ')) {
+        return <li key={index} className="ml-4 mb-1">{line.substring(2)}</li>;
+      } else if (line.startsWith('* ')) {
+        return <li key={index} className="ml-4 mb-1">{line.substring(2)}</li>;
+      } else if (line.match(/^\d+\. /)) {
+        const content = line.replace(/^\d+\. /, '');
+        return <li key={index} className="ml-6 mb-1 list-decimal">{content}</li>;
+      }
+      
+      // Code blocks (simple implementation)
+      else if (line.startsWith('```')) {
+        return <div key={index} className="bg-gray-100 p-2 rounded my-2 font-mono text-sm">{line.substring(3)}</div>;
+      }
+      
+      // Empty lines become paragraph breaks
+      else if (line.trim() === '') {
+        return <br key={index} />;
+      }
+      
+      // Default: regular paragraph
+      else {
+        return <p key={index} className="mb-2">{line}</p>;
+      }
+    });
   };
 
   return (
-    <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-lg">
-      <div className="flex justify-between items-start mb-4">
-        <h2 className="text-xl font-bold text-gray-800">
-          Step {stepIndex + 1}: {stepDetail.step_title}
-        </h2>
-        <div className="flex space-x-2">
-          <button
-            onClick={() => setShowRawFormat(!showRawFormat)}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium py-1 px-3 rounded"
-          >
-            {showRawFormat ? 'Show Formatted' : 'Show Raw'}
-          </button>
-          <button
-            onClick={handleCopy}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-1 px-3 rounded flex items-center"
-          >
-            <span>{copySuccess || 'Copy'}</span>
-          </button>
-          <button
-            onClick={handleDownload}
-            className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-1 px-3 rounded"
-          >
-            Download
-          </button>
-        </div>
+    <div className="w-full max-w-4xl mx-auto bg-white border border-gray-200 rounded-lg shadow-lg">
+      <div className="p-6 border-b border-gray-200">
+        <h2 className="text-2xl font-bold text-center text-gray-800">{step.title}</h2>
+        <p className="text-center text-gray-600 mt-1">Estimated Time: {step.estimated_time}</p>
       </div>
       
-      <p className="text-sm mb-4 text-gray-600">
-        Estimated Time: {stepDetail.estimated_time}
-      </p>
-      
-      <div className="pt-4 border-t border-gray-200">
-        {showRawFormat ? (
-          <pre className="bg-gray-100 text-gray-800 p-4 rounded overflow-auto whitespace-pre-wrap text-sm">
-            {stepDetail.formatted_text}
-          </pre>
-        ) : (
-          <div className="prose prose-gray max-w-none">
-            <ReactMarkdown 
-              rehypePlugins={[rehypeRaw, rehypeHighlight]} 
-              remarkPlugins={[remarkGfm]}
-              components={{
-                h1: ({node, ...props}) => <h1 className="text-2xl font-bold my-4 text-gray-800" {...props} />,
-                h2: ({node, ...props}) => <h2 className="text-xl font-bold my-3 text-gray-800" {...props} />,
-                h3: ({node, ...props}) => <h3 className="text-lg font-bold my-2 text-gray-800" {...props} />,
-                strong: ({node, ...props}) => <strong className="font-bold text-gray-800" {...props} />,
-                code: ({node, inline, ...props}) => 
-                  inline ? <code className="bg-gray-200 px-1 rounded" {...props} /> : <code {...props} />
-              }}
-            >
-              {stepDetail.formatted_text}
-            </ReactMarkdown>
+      <div className="p-6">
+        {step.objectives && (
+          <div className="mb-6">
+            <h3 className="text-xl font-semibold mb-3 text-gray-800">Learning Objectives</h3>
+            <ul className="list-disc pl-5 space-y-1">
+              {step.objectives.map((objective, index) => (
+                <li key={index} className="text-gray-700">{objective}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        
+        {step.description && (
+          <div className="mb-6">
+            <h3 className="text-xl font-semibold mb-3 text-gray-800">Description</h3>
+            <div className="text-gray-700 space-y-1">
+              {renderContent(step.description)}
+            </div>
+          </div>
+        )}
+        
+        {step.content && (
+          <div className="mb-6">
+            <h3 className="text-xl font-semibold mb-3 text-gray-800">Content</h3>
+            <div className="text-gray-700 space-y-1">
+              {renderContent(step.content)}
+            </div>
+          </div>
+        )}
+        
+        {step.activities && step.activities.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-xl font-semibold mb-3 text-gray-800">Activities</h3>
+            <div className="space-y-3">
+              {step.activities.map((activity, index) => (
+                <div key={index} className="bg-gray-50 p-4 rounded-md border border-gray-100">
+                  <h4 className="font-medium text-gray-800 mb-2">{activity.title}</h4>
+                  <p className="text-gray-700">{activity.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {step.resources && step.resources.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-xl font-semibold mb-3 text-gray-800">Resources</h3>
+            <ul className="space-y-2">
+              {step.resources.map((resource, index) => (
+                <li key={index} className="flex items-start">
+                  <span className="mr-2">📚</span>
+                  <div>
+                    <a 
+                      href={resource.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline font-medium"
+                    >
+                      {resource.title}
+                    </a>
+                    {resource.description && (
+                      <p className="text-sm text-gray-600 mt-1">{resource.description}</p>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        
+        {step.assessment && (
+          <div className="mt-6 p-4 bg-blue-50 rounded-md border border-blue-100">
+            <h3 className="text-xl font-semibold mb-3 text-gray-800">Assessment</h3>
+            <div className="text-gray-700">
+              {renderContent(step.assessment)}
+            </div>
           </div>
         )}
       </div>

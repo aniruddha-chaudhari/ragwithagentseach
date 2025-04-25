@@ -19,7 +19,10 @@ const AttachModal = ({ isOpen, onClose, sessionId, onDocumentProcessed }) => {
     'image/jpeg', 
     'image/jpg', 
     'image/gif', 
-    'image/webp'
+    'image/webp',
+    'text/csv',
+    'application/vnd.ms-excel',
+    'application/csv'
   ];
 
   if (!isOpen) return null;
@@ -28,7 +31,7 @@ const AttachModal = ({ isOpen, onClose, sessionId, onDocumentProcessed }) => {
     if (!file) return "No file selected";
     
     if (!ALLOWED_TYPES.includes(file.type)) {
-      return "Invalid file type. Please upload a PDF or image file.";
+      return "Invalid file type. Please upload a PDF, image, or CSV file.";
     }
     
     if (file.size > MAX_FILE_SIZE) {
@@ -201,7 +204,7 @@ const AttachModal = ({ isOpen, onClose, sessionId, onDocumentProcessed }) => {
                   <p className="mb-2 font-medium text-gray-800">Upload files</p>
                   <p className="text-sm text-gray-500 mb-2">Drag and drop or click to browse</p>
                   <p className="text-xs text-gray-500 mb-4">
-                    Supported formats: PDF, PNG, JPG, GIF, WEBP<br/>
+                    Supported formats: PDF, PNG, JPG, GIF, WEBP, CSV<br/>
                     Max size: 10MB
                   </p>
                 </>
@@ -220,7 +223,7 @@ const AttachModal = ({ isOpen, onClose, sessionId, onDocumentProcessed }) => {
                 disabled={isLoading}
                 className="hidden"
                 id="file-upload"
-                accept=".pdf,.png,.jpg,.jpeg,.gif,.webp"
+                accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.csv,.xls,.xlsx"
               />
               
               <div className="mt-4">

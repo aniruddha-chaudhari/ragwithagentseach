@@ -185,8 +185,15 @@ def save_current_session(session_state):
         # If no existing name or default name and we have history, generate name from first user query
         for message in session_state.history:
             if message["role"] == "user":
-                session_name = generate_session_title(message["content"])
-                break
+                try:
+                    session_name = generate_session_title(message["content"])
+                    # Ensure we never return an empty title
+                    if not session_name or session_name.strip() == "":
+                        session_name = "Untitled Session"
+                    break
+                except Exception as e:
+                    print(f"Error generating session title: {str(e)}")
+                    # If title generation fails, keep default
     
     session_data = {
         "history": session_state.history,

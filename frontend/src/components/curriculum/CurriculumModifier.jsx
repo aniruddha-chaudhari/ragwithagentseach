@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CurriculumService } from '../../services/CurriculumService';
+import { knowledgeResearchService } from '../../services/KnowledgeResearchService';
 import Spinner from '../ui/Spinner';
 
 const CurriculumModifier = ({ curriculum, onModified, onCancel }) => {
@@ -15,7 +15,7 @@ const CurriculumModifier = ({ curriculum, onModified, onCancel }) => {
     setError('');
 
     try {
-      const modifiedCurriculum = await CurriculumService.modifyCurriculum(
+      const modifiedCurriculum = await knowledgeResearchService.modifyResearch(
         curriculum.curriculum_id,
         modificationText
       );
@@ -32,66 +32,75 @@ const CurriculumModifier = ({ curriculum, onModified, onCancel }) => {
   };
 
   return (
-    <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800">Modify Curriculum</h2>
-      
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded mb-4">
-          {error}
-        </div>
-      )}
-      
-      <div className="mb-6">
-        <h3 className="text-xl font-semibold mb-2 text-gray-700">
+    <div className="w-full max-w-2xl mx-auto bg-white border border-gray-200 rounded-lg shadow-lg">
+      <div className="p-6 border-b border-gray-200">
+        <h2 className="text-2xl font-bold text-center text-gray-800">Modify Curriculum</h2>
+        <p className="text-center text-gray-600 mt-1">
           {curriculum.title}
-        </h3>
-        <p className="text-gray-600 mb-2">{curriculum.overview}</p>
+        </p>
       </div>
       
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="modificationText">
-            Modification Instructions
-          </label>
-          <textarea
-            id="modificationText"
-            value={modificationText}
-            onChange={(e) => setModificationText(e.target.value)}
-            placeholder="Describe how you want to modify the curriculum. E.g., Add a section on async programming, make it more beginner-friendly, etc."
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-40"
-            required
-          />
+      <div className="p-6">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded mb-4">
+            {error}
+          </div>
+        )}
+        
+        <div className="mb-6 p-4 bg-gray-50 rounded-md border border-gray-100">
+          <h3 className="text-lg font-semibold mb-2 text-gray-700">
+            Current Overview
+          </h3>
+          <p className="text-gray-600">{curriculum.overview}</p>
         </div>
         
-        <div className="flex items-center justify-between">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          >
-            Cancel
-          </button>
-          
-          <button
-            type="submit"
-            disabled={isLoading || !modificationText.trim()}
-            className={`${
-              isLoading || !modificationText.trim()
-                ? 'bg-blue-300 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700'
-            } text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center gap-2`}
-          >
-            {isLoading ? (
-              <>
-                <Spinner size="sm" className="border-white border-t-transparent" />
-                <span>Updating...</span>
-              </>
-            ) : (
-              'Apply Modifications'
-            )}
-          </button>
-        </div>
-      </form>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700" htmlFor="modificationText">
+              Modification Instructions
+            </label>
+            <textarea
+              id="modificationText"
+              value={modificationText}
+              onChange={(e) => setModificationText(e.target.value)}
+              placeholder="Describe how you want to modify the curriculum. E.g., Add a section on async programming, make it more beginner-friendly, etc."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 h-40"
+              required
+              disabled={isLoading}
+            />
+          </div>
+        </form>
+      </div>
+      
+      <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+          disabled={isLoading}
+        >
+          Cancel
+        </button>
+        
+        <button
+          onClick={handleSubmit}
+          disabled={isLoading || !modificationText.trim()}
+          className={`${
+            isLoading || !modificationText.trim()
+              ? 'bg-blue-300 cursor-not-allowed'
+              : 'bg-black hover:bg-gray-700'
+          } text-white font-medium py-2 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center gap-2`}
+        >
+          {isLoading ? (
+            <>
+              <Spinner size="sm" className="border-white border-t-transparent" />
+              <span>Updating...</span>
+            </>
+          ) : (
+            'Apply Modifications'
+          )}
+        </button>
+      </div>
     </div>
   );
 };

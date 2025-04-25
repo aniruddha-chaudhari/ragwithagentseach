@@ -58,10 +58,10 @@ const DocumentUploader = ({ sessionId, onDocumentProcessed }) => {
           onChange={handleFileUpload}
           disabled={isLoading}
           className="w-full border p-2 rounded text-sm bg-white"
-          accept=".pdf,.png,.jpg,.jpeg,.gif,.webp"
+          accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.csv"
         />
         <div className="text-xs text-gray-500 mt-1">
-          Supported formats: PDF, PNG, JPG, JPEG, GIF, WEBP
+          Supported formats: PDF, PNG, JPG, JPEG, GIF, WEBP, CSV
         </div>
       </div>
       

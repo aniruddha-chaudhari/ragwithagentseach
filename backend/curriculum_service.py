@@ -6,11 +6,11 @@ from typing import Dict, Any, List, Optional, Tuple
 from pydantic import BaseModel
 
 # Import curriculum generation components
-from coordinator_agent import CoordinatorInput, coordinate
+from coordinator_agent import ResearchInput as CoordinatorInput, coordinate
 from agents.overview_agent import CurriculumStep, CurriculumOverview, format_curriculum_text
 from utils.curriculum_utils import save_curriculum_step, get_curriculum_step, update_curriculum_step
 from agents.writeragents import modify_curriculum
-from agents.detailagent import generate_step_detail, format_detailed_step_text, StepDetailInput, DetailedStep
+from agents.detailagent import generate_section_detail as generate_step_detail, format_detailed_section_text as format_detailed_step_text, SectionDetailInput as StepDetailInput, DetailedSection as DetailedStep
 
 class CurriculumRequest(BaseModel):
     """Request model for curriculum generation"""
@@ -65,8 +65,8 @@ def generate_curriculum(request: CurriculumRequest) -> CurriculumResponse:
         # Create input for coordinator
         coordinator_input = CoordinatorInput(
             query=request.subject,
-            syllabus_url=request.syllabus_url,
-            time_constraint=request.time_constraint
+            source_url=request.syllabus_url,
+            depth_level=request.time_constraint
         )
         
         # Generate curriculum

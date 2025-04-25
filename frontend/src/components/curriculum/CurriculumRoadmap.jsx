@@ -29,16 +29,22 @@ const CurriculumRoadmap = ({ roadmapData }) => {
 
   if (!roadmapData) {
     return (
-      <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-lg text-center">
+      <div className="w-full max-w-4xl mx-auto bg-white border border-gray-200 rounded-lg shadow-lg p-6 text-center">
         <p className="text-gray-700">No roadmap data available</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-lg">
-      <h2 className="text-xl font-bold mb-4 text-gray-800">Curriculum Roadmap</h2>
-      <div ref={mermaidRef} className="overflow-auto" id="mermaid-diagram-container"></div>
+    <div className="w-full max-w-4xl mx-auto bg-white border border-gray-200 rounded-lg shadow-lg">
+      <div className="p-6 border-b border-gray-200">
+        <h2 className="text-2xl font-bold text-center text-gray-800">Curriculum Roadmap</h2>
+        <p className="text-center text-gray-600 mt-1">Visual learning path</p>
+      </div>
+      
+      <div className="p-6">
+        <div ref={mermaidRef} className="overflow-auto" id="mermaid-diagram-container"></div>
+      </div>
     </div>
   );
 };

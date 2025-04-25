@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { MessageSquare, Menu, PenLine, Trash2, FileText, Image, Globe, Layers, X } from 'lucide-react';
+import { MessageSquare, Menu, PenLine, Trash2, FileText, Image, Globe, Layers, Brain, X } from 'lucide-react';
 import { getSessions, createSession, deleteSession, getSession } from '../utils/api';
+import Ben10Logo from './ui/Ben10Logo';
 
 const Sidebar = ({ currentPage, isOpen, toggleSidebar, currentSessionId, onSessionChange }) => {
   const [sessions, setSessions] = useState([]);
@@ -99,8 +100,8 @@ const Sidebar = ({ currentPage, isOpen, toggleSidebar, currentSessionId, onSessi
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
         {isOpen && (
-          <h1 className="text-xl font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            Teacher AI
+          <h1 className="flex items-center gap-2 text-2xl font-bold bg-gradient-to-r from-blue-500 to-indigo-800 bg-clip-text text-transparent">
+            Echo Mind
           </h1>
         )}
         <button

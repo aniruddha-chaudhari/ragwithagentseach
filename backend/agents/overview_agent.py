@@ -10,13 +10,27 @@ from search import google_search
 # Use TYPE_CHECKING to avoid circular imports
 if TYPE_CHECKING:
     # Only imports during type checking, not at runtime
-    from coordinator_agent import CoordinatorOutput
+    from coordinator_agent import KnowledgeOutput
 
+class KnowledgeSection(BaseModel):
+    """Model for a knowledge section"""
+    title: str
+    estimated_time: str
+
+class KnowledgeOverview(BaseModel):
+    """Model for the complete knowledge overview"""
+    research_id: str
+    title: str
+    overview: str
+    sections: List[KnowledgeSection]
+    complexity_level: str
+
+# For compatibility with curriculum_service imports
 class CurriculumStep(BaseModel):
     """Model for a curriculum step"""
     title: str
+    objectives: List[str] = Field(default_factory=list)
     estimated_time: str
-    # Removed objectives field
 
 class CurriculumOverview(BaseModel):
     """Model for the complete curriculum overview"""
@@ -26,30 +40,30 @@ class CurriculumOverview(BaseModel):
     steps: List[CurriculumStep]
     total_time: str
 
-def generate_overview(coordinator_output: "CoordinatorOutput") -> CurriculumOverview:
+def generate_overview(coordinator_output: "KnowledgeOutput") -> KnowledgeOverview:
     """
-    Generate a simplified curriculum overview from coordinator output
+    Generate a simplified knowledge overview from coordinator output
     
     Args:
         coordinator_output: The structured output from the coordinator agent
         
     Returns:
-        CurriculumOverview: The simplified curriculum overview with steps
+        KnowledgeOverview: The simplified knowledge overview with sections
     """
     # Extract key data from coordinator output
-    curriculum_id = coordinator_output.curriculum_id
-    subject = coordinator_output.subject
-    description = coordinator_output.description
-    extracted_topics = coordinator_output.extracted_topics
-    suggested_structure = coordinator_output.suggested_structure
-    time_allocation = coordinator_output.time_allocation
-    total_time = coordinator_output.total_time
+    research_id = coordinator_output.research_id
+    topic = coordinator_output.topic
+    summary = coordinator_output.summary
+    key_concepts = coordinator_output.key_concepts
+    knowledge_structure = coordinator_output.knowledge_structure
+    depth_metrics = coordinator_output.depth_metrics
+    complexity_level = coordinator_output.complexity_level
     
-    # Perform additional Google search to enhance curriculum context
+    # Perform additional Google search to enhance knowledge context
     search_results = ""
     try:
-        print(f"Performing additional search for curriculum context on: {subject} curriculum")
-        search_query = f"{subject} curriculum best practices educational standards"
+        print(f"Performing additional search for knowledge context on: {topic}")
+        search_query = f"{topic} research latest understanding"
         search_text, _ = google_search(search_query)
         if search_text:
             search_results = f"\nAdditional context from search:\n{search_text}"
@@ -59,41 +73,41 @@ def generate_overview(coordinator_output: "CoordinatorOutput") -> CurriculumOver
     except Exception as e:
         print(f"Error performing additional search: {e}")
     
-    # Use Gemini API to generate the curriculum overview
+    # Use Gemini API to generate the knowledge overview
     try:
         api_key = os.getenv("GEMINI_API_KEY", "")
         client = genai.Client(api_key=api_key)
         
         # Create a prompt for Gemini using the coordinator data with simplified requirements
         overview_prompt = f"""
-        You are an expert educational curriculum designer. Create a simplified curriculum overview 
-        for the subject: {subject}
+        You are an expert researcher and knowledge organizer. Create a simplified knowledge overview 
+        for the topic: {topic}
         
-        Here are the extracted topics and their relationships:
-        {json.dumps(extracted_topics)}
+        Here are the key concepts and their relationships:
+        {json.dumps(key_concepts)}
         
-        Here is the suggested curriculum structure:
-        {json.dumps(suggested_structure)}
+        Here is the suggested knowledge structure:
+        {json.dumps(knowledge_structure)}
         
-        Time constraint: {total_time}
+        Complexity level: {complexity_level}
         {search_results}
         
-        Generate a curriculum with the following:
-        1. A concise title for the curriculum
-        2. A brief overview paragraph (3-5 sentences) describing the curriculum's purpose and structure
-        3. 5-10 logical learning steps that progress from beginner to advanced level
-        4. For each step, provide:
+        Generate a knowledge overview with the following:
+        1. A concise title for the research overview
+        2. A brief overview paragraph (3-5 sentences) describing the topic's importance and structure
+        3. 5-10 logical knowledge sections that present information from fundamental to advanced
+        4. For each section, provide:
            - A clear, descriptive title
-           - Estimated time to complete (in hours or weeks)
+           - Estimated time to comprehend this knowledge section
         
         Format your response as JSON with this structure:
         {{
-          "title": "Curriculum Title",
+          "title": "Knowledge Overview Title",
           "overview": "Brief overview paragraph",
-          "steps": [
+          "sections": [
             {{
-              "title": "Step Title",
-              "estimated_time": "X hours/weeks"
+              "title": "Section Title",
+              "estimated_time": "X hours/days to comprehend"
             }}
           ]
         }}
@@ -119,41 +133,62 @@ def generate_overview(coordinator_output: "CoordinatorOutput") -> CurriculumOver
         # Parse JSON
         overview_data = json.loads(response_text.strip())
         
-        # Create steps from the JSON data
-        steps = []
-        for step_data in overview_data.get("steps", []):
-            steps.append(CurriculumStep(
-                title=step_data.get("title", "Untitled Step"),
-                estimated_time=step_data.get("estimated_time", "Not specified")
+        # Create sections from the JSON data
+        sections = []
+        for section_data in overview_data.get("sections", []):
+            sections.append(KnowledgeSection(
+                title=section_data.get("title", "Untitled Section"),
+                estimated_time=section_data.get("estimated_time", "Not specified")
             ))
         
-        # Create and return the full curriculum overview
-        return CurriculumOverview(
-            curriculum_id=curriculum_id,
-            title=overview_data.get("title", f"Curriculum for {subject}"),
-            overview=overview_data.get("overview", description),
-            steps=steps,
-            total_time=total_time
+        # Create and return the full knowledge overview
+        return KnowledgeOverview(
+            research_id=research_id,
+            title=overview_data.get("title", f"Knowledge Overview for {topic}"),
+            overview=overview_data.get("overview", summary),
+            sections=sections,
+            complexity_level=complexity_level
         )
     
     except Exception as e:
-        print(f"Error generating curriculum overview: {e}")
+        print(f"Error generating knowledge overview: {e}")
         
         # Create a fallback overview if API call fails
-        steps = []
-        for i, topic in enumerate(extracted_topics[:5], 1):
-            steps.append(CurriculumStep(
-                title=topic.get("name", f"Step {i}"),
-                estimated_time="2 weeks"
+        sections = []
+        for i, concept in enumerate(key_concepts[:5], 1):
+            sections.append(KnowledgeSection(
+                title=concept.get("name", f"Section {i}"),
+                estimated_time="2 days"
             ))
         
-        return CurriculumOverview(
-            curriculum_id=curriculum_id,
-            title=f"Curriculum for {subject}",
-            overview=f"This curriculum covers the fundamentals of {subject}, progressing from basic concepts to advanced applications.",
-            steps=steps,
-            total_time=total_time
+        return KnowledgeOverview(
+            research_id=research_id,
+            title=f"Knowledge Overview for {topic}",
+            overview=f"This overview covers the fundamentals of {topic}, progressing from basic concepts to advanced applications.",
+            sections=sections,
+            complexity_level=complexity_level
         )
+
+def format_overview_text(overview: KnowledgeOverview) -> str:
+    """
+    Format the knowledge overview as a human-readable text
+    
+    Args:
+        overview: The knowledge overview object
+        
+    Returns:
+        str: Formatted text representation of the knowledge
+    """
+    text = f"# {overview.title}\n\n"
+    text += f"## Overview\n{overview.overview}\n\n"
+    text += f"**Complexity Level: {overview.complexity_level}**\n\n"
+    text += "## Knowledge Sections\n\n"
+    
+    for i, section in enumerate(overview.sections, 1):
+        text += f"### {i}. {section.title}\n"
+        text += f"**Estimated Time to Comprehend:** {section.estimated_time}\n\n"
+    
+    return text
 
 def format_curriculum_text(overview: CurriculumOverview) -> str:
     """
@@ -172,30 +207,83 @@ def format_curriculum_text(overview: CurriculumOverview) -> str:
     
     for i, step in enumerate(overview.steps, 1):
         text += f"### {i}. {step.title}\n"
-        text += f"**Estimated Time:** {step.estimated_time}\n\n"
+        text += f"**Estimated Time:** {step.estimated_time}\n"
+        if step.objectives:
+            text += "**Objectives:**\n"
+            for objective in step.objectives:
+                text += f"- {objective}\n"
+        text += "\n"
     
     return text
 
+def format_any_overview_text(overview) -> str:
+    """
+    Format either a knowledge overview or curriculum overview as a human-readable text
+    
+    Args:
+        overview: Either a KnowledgeOverview or CurriculumOverview object
+        
+    Returns:
+        str: Formatted text representation
+    """
+    if hasattr(overview, 'sections'):  # It's a KnowledgeOverview
+        return format_overview_text(overview)
+    elif hasattr(overview, 'steps'):   # It's a CurriculumOverview
+        return format_curriculum_text(overview)
+    elif isinstance(overview, dict):   # It's a dictionary representation
+        if 'sections' in overview:
+            # Convert dict to KnowledgeOverview
+            sections = [KnowledgeSection(title=s.get('title', 'Untitled'), 
+                                        estimated_time=s.get('estimated_time', 'Not specified')) 
+                       for s in overview.get('sections', [])]
+            
+            temp_overview = KnowledgeOverview(
+                research_id=overview.get('research_id', 'unknown'),
+                title=overview.get('title', 'Untitled Overview'),
+                overview=overview.get('overview', 'No overview available'),
+                sections=sections,
+                complexity_level=overview.get('complexity_level', 'Not specified')
+            )
+            return format_overview_text(temp_overview)
+        elif 'steps' in overview:
+            # Convert dict to CurriculumOverview
+            steps = [CurriculumStep(title=s.get('title', 'Untitled'), 
+                                  estimated_time=s.get('estimated_time', 'Not specified'),
+                                  objectives=s.get('objectives', [])) 
+                   for s in overview.get('steps', [])]
+            
+            temp_overview = CurriculumOverview(
+                curriculum_id=overview.get('curriculum_id', 'unknown'),
+                title=overview.get('title', 'Untitled Curriculum'),
+                overview=overview.get('overview', 'No overview available'),
+                steps=steps,
+                total_time=overview.get('total_time', 'Not specified')
+            )
+            return format_curriculum_text(temp_overview)
+    
+    # Fallback for unknown object types
+    return "Could not format overview: unknown overview type"
+
 if __name__ == "__main__":
     # For testing purposes
-    from coordinator_agent import CoordinatorInput, coordinate
+    from coordinator_agent import ResearchInput, coordinate
     
-    test_input = CoordinatorInput(
-        query="Introduction to Machine Learning",
-        time_constraint="8 weeks"
+    test_input = ResearchInput(
+        query="Quantum Computing",
+        depth_level="Advanced"
     )
     
     coordinator_result = coordinate(test_input)
-    overview_result = generate_overview(coordinator_result)
+    overview_result = generate_overview(coordinator_result.raw_data)
     
     print("Overview Generation Complete!")
     print(f"Title: {overview_result.title}")
     print(f"Overview: {overview_result.overview}")
-    print("\nSteps:")
-    for i, step in enumerate(overview_result.steps, 1):
-        print(f"{i}. {step.title}")
-        print(f"   Estimated Time: {step.estimated_time}")
+    print("\nSections:")
+    for i, section in enumerate(overview_result.sections, 1):
+        print(f"{i}. {section.title}")
+        print(f"   Estimated Time: {section.estimated_time}")
     
     # Print formatted text version
-    print("\nFormatted Curriculum:")
-    print(format_curriculum_text(overview_result))
+    print("\nFormatted Overview:")
+    print(format_overview_text(overview_result))

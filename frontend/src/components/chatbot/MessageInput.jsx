@@ -37,6 +37,20 @@ const MessageInput = ({ onSendMessage, isLoading, onAttach }) => {
     }
   };
 
+  // Prefetch the voice mode link
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.href = 'https://modal2-pi.vercel.app/';
+    document.head.appendChild(link);
+    
+    return () => {
+      if (link.parentNode) {
+        document.head.removeChild(link);
+      }
+    };
+  }, []);
+
   return (
     <form onSubmit={handleSubmit} className="relative max-w-3xl mx-auto w-full">
       <div className="relative flex items-end rounded-lg bg-gray-50 shadow-lg border border-gray-200">
@@ -83,11 +97,7 @@ const MessageInput = ({ onSendMessage, isLoading, onAttach }) => {
             onClick={() => {
               window.location.href = "https://modal2-pi.vercel.app/";
             }}
-            className={`inline-flex items-center justify-center w-9 h-9 rounded-md text-sm transition-all duration-200 cursor-pointer ${
-              forceWebSearch
-                ? "bg-blue-600 text-white ring-2 ring-blue-200"
-                : "text-gray-500 hover:text-gray-800 hover:bg-gray-200"
-            }`}
+            className={`inline-flex items-center justify-center w-9 h-9 rounded-md text-sm transition-all duration-200 cursor-pointer opacity-50`}
             title={"Voice mode"}
             aria-label={"Voice mode"}
           >

@@ -10,48 +10,48 @@ from google import genai
 # Import search functionality
 from search import google_search
 
-class StepDetailInput(BaseModel):
-    """Input model for detailed curriculum step generation"""
-    step_title: str
+class SectionDetailInput(BaseModel):
+    """Input model for detailed knowledge section generation"""
+    section_title: str
     estimated_time: str
-    subject: str = ""
-    user_modifications: Optional[str] = None
+    topic: str = ""
+    user_preferences: Optional[str] = None
 
-class DetailedStep(BaseModel):
-    """Model for the detailed curriculum step"""
-    step_title: str
+class DetailedSection(BaseModel):
+    """Model for the detailed knowledge section"""
+    section_title: str
     estimated_time: str
-    learning_objectives: List[str] = Field(default_factory=list)
-    subtopics: List[str] = Field(default_factory=list)  # Added new field for subtopics
+    key_points: List[str] = Field(default_factory=list)
+    subtopics: List[str] = Field(default_factory=list)
     core_concepts: str = ""
-    learning_resources: List[Dict[str, str]] = Field(default_factory=list)
-    practice_exercises: List[Dict[str, str]] = Field(default_factory=list)
-    assessment_methods: str = ""
-    advanced_topics: List[str] = Field(default_factory=list)
-    connections: Dict[str, str] = Field(default_factory=dict)
+    information_sources: List[Dict[str, str]] = Field(default_factory=list)
+    practical_applications: List[Dict[str, str]] = Field(default_factory=list)
+    verification_methods: str = ""
+    advanced_exploration: List[str] = Field(default_factory=list)
+    relationships: Dict[str, str] = Field(default_factory=dict)
 
 def get_detail_generator_agent() -> Agent:
-    """Initialize a detailed curriculum step generator agent"""
+    """Initialize a detailed knowledge section generator agent"""
     return Agent(
-        name="Curriculum Detail Generator",
+        name="Knowledge Detail Generator",
         model=Gemini(id="gemini-2.0-flash"),
-        instructions="""You are an expert educational content developer specializing in creating 
-        detailed, comprehensive learning materials. Your task is to expand a curriculum step 
-        outline into detailed learning content.
+        instructions="""You are an expert researcher specializing in creating 
+        detailed, comprehensive knowledge resources. Your task is to expand a 
+        knowledge section into detailed content.
 
-        When given a step title and estimated time, create comprehensive detailed content that includes:
-        - 3-5 key learning objectives based on the step title and estimated time
-        - Subtopics that should be covered under this step
+        When given a section title and estimated time, create comprehensive detailed content that includes:
+        - 3-5 key points the reader should understand about this section
+        - Subtopics that should be explored within this section
         - Brief overview of core concepts (keep minimal as we now have subtopics)
-        - Learning resources (identified through search) with mix of types (articles, videos, tutorials)
-          marked as essential or supplementary
-        - Practice exercises of varying difficulty with clear instructions, expected outcomes, and hints
-        - Assessment methods aligned with learning objectives, including evaluation criteria
-        - Advanced topics or extensions for further exploration
-        - Connections to previous and next steps
+        - Information sources (identified through search) with mix of types (articles, academic papers, videos)
+          labeled as authoritative or supplementary
+        - Practical applications of this knowledge with real-world examples
+        - Verification methods explaining how the information can be validated
+        - Advanced exploration areas for deeper understanding
+        - Relationships to other knowledge areas and topics
 
-        Make content educational, practical, and engaging, focusing on both theoretical understanding 
-        and practical skills. Ensure content is comprehensive but focused on the estimated time frame.
+        Make content educational, accurate, and engaging, focusing on both theoretical understanding 
+        and practical applications. Ensure content is comprehensive but appropriate for the estimated time frame.
 
         Format your response as a structured JSON object with all the above sections.
         """,
@@ -59,85 +59,86 @@ def get_detail_generator_agent() -> Agent:
         markdown=True,
     )
 
-def generate_step_detail(input_data: StepDetailInput) -> DetailedStep:
+def generate_section_detail(input_data: SectionDetailInput) -> DetailedSection:
     """
-    Generate detailed content for a curriculum step
+    Generate detailed content for a knowledge section
     
     Args:
-        input_data: The input data containing step title, estimated time, etc.
+        input_data: The input data containing section title, estimated time, etc.
         
     Returns:
-        DetailedStep: The detailed curriculum step
+        DetailedSection: The detailed knowledge section
     """
     try:
-        # Perform an initial search to gather context and resources
+        # Perform an initial search to gather context and sources
         search_results = ""
-        resource_links = []
+        source_links = []
         
         try:
-            print(f"Searching for resources on: {input_data.step_title}")
+            print(f"Searching for sources on: {input_data.section_title}")
             # First search for general content on the topic
-            search_query = f"{input_data.step_title} learning resources tutorial"
-            if input_data.subject:
-                search_query += f" {input_data.subject}" 
+            search_query = f"{input_data.section_title} research sources"
+            if input_data.topic:
+                search_query += f" {input_data.topic}" 
                 
             search_text, links = google_search(search_query)
             if search_text:
-                search_results = f"\nSearch Results for Resources:\n{search_text}"
-                resource_links = links
-                print(f"Found {len(links)} resource links")
+                search_results = f"\nSearch Results for Information Sources:\n{search_text}"
+                source_links = links
+                print(f"Found {len(links)} source links")
         except Exception as e:
-            print(f"Error performing search for resources: {e}")
+            print(f"Error performing search for sources: {e}")
         
-        # Use Gemini API to generate the detailed step content
+        # Use Gemini API to generate the detailed content
         api_key = os.getenv("GEMINI_API_KEY", "")
         client = genai.Client(api_key=api_key)
         
         # Create a prompt for Gemini
         detail_prompt = f"""
-        You are an expert educational content developer specializing in creating detailed, comprehensive learning materials.
-        Your task is to expand a curriculum step outline into detailed learning content.
+        You are an expert researcher specializing in creating detailed, comprehensive knowledge resources.
+        Your task is to expand a knowledge section into detailed content.
 
         **Input:**
-        - Step title: {input_data.step_title}
-        - Estimated time: {input_data.estimated_time}
-        - User modifications: {input_data.user_modifications or "None provided"}
+        - Section title: {input_data.section_title}
+        - Estimated time to comprehend: {input_data.estimated_time}
+        - Main topic: {input_data.topic}
+        - User preferences: {input_data.user_preferences or "None provided"}
         
         {search_results}
         
         **Output Requirements:**
-        - Generate 3-5 key learning objectives based on the step title and estimated time.
-        - Create comprehensive detailed content for the curriculum step, with the following sections:
-          - Subtopics: List the subtitles of the subtopics the user should learn under this step.
-          - Learning Resources: Use the search results to curate a list of the top 3-5 resources, ensuring a mix of types (articles, videos, tutorials). Mark which are essential vs. supplementary.
-          - Practice Exercises: Provide 3-5 practical exercises of varying difficulty with clear instructions, expected outcomes, and hints.
-          - Assessment Methods: Design quizzes, projects, or other assessments aligned with learning objectives, including evaluation criteria.
-          - Advanced Topics: Suggest deeper or related topics for further exploration.
-        - Incorporate any user modifications if provided.
+        - Generate 3-5 key points that readers should understand from this section based on the section title and complexity.
+        - Create comprehensive detailed content for the knowledge section, with the following parts:
+          - Subtopics: List specific subtopics that should be explored within this section.
+          - Information Sources: Use the search results to curate a list of the top 3-5 sources, ensuring a mix of types (articles, academic papers, videos). Label which are authoritative vs. supplementary.
+          - Practical Applications: Provide 3-5 real-world applications of this knowledge with specific examples.
+          - Verification Methods: Explain how information in this section can be validated or tested.
+          - Advanced Exploration: Suggest deeper or related topics for further exploration.
+        - Incorporate any user preferences if provided.
 
         Generate detailed educational content in JSON format with the following structure:
         {{
-          "learning_objectives": ["objective1", "objective2", "objective3"],
+          "key_points": ["point1", "point2", "point3"],
           "subtopics": ["subtopic1", "subtopic2", "subtopic3"],
           "core_concepts": "Brief overview of core concepts (keep minimal as we now have subtopics)",
-          "learning_resources": [
-            {{"title": "Resource title", "url": "url", "description": "Brief description", "type": "essential/supplementary"}}
+          "information_sources": [
+            {{"title": "Source title", "url": "url", "description": "Brief description", "type": "authoritative/supplementary"}}
           ],
-          "practice_exercises": [
-            {{"title": "Exercise title", "description": "Exercise description with clear instructions and expected outcomes", "difficulty": "beginner/intermediate/advanced"}}
+          "practical_applications": [
+            {{"title": "Application example", "description": "Description of how this knowledge applies to real-world scenarios", "context": "academic/industry/everyday"}}
           ],
-          "assessment_methods": "Description of quizzes, projects or assessments with evaluation criteria in bullet points",
-          "advanced_topics": ["topic1", "topic2", "topic3"],
-          "connections": {{
-            "previous": "How this builds on previous knowledge",
-            "next": "How this prepares for future learning"
+          "verification_methods": "Description of how to validate or test this information",
+          "advanced_exploration": ["topic1", "topic2", "topic3"],
+          "relationships": {{
+            "prerequisite": "Knowledge this builds upon",
+            "related": "Connected knowledge areas"
           }}
         }}
         
-        Ensure the learning resources include these URLs when relevant: {json.dumps(resource_links)}
+        Ensure the information sources include these URLs when relevant: {json.dumps(source_links)}
         Use formatting (bullet points, section headings) to make content digestible.
-        Ensure content is comprehensive but focused on the estimated time frame.
-        Make the content educational, practical, and engaging, focusing on both theoretical understanding and practical skills.
+        Ensure content is appropriately complex for the estimated time frame.
+        Make the content educational, accurate, and engaging, focusing on both theoretical understanding and practical applications.
         """
         
         response = client.models.generate_content(
@@ -160,115 +161,115 @@ def generate_step_detail(input_data: StepDetailInput) -> DetailedStep:
         # Parse JSON
         detail_data = json.loads(response_text.strip())
         
-        # Create the detailed step
-        detailed_step = DetailedStep(
-            step_title=input_data.step_title,
+        # Create the detailed section
+        detailed_section = DetailedSection(
+            section_title=input_data.section_title,
             estimated_time=input_data.estimated_time,
-            learning_objectives=detail_data.get("learning_objectives", []),
+            key_points=detail_data.get("key_points", []),
             subtopics=detail_data.get("subtopics", []),
             core_concepts=detail_data.get("core_concepts", ""),
-            learning_resources=detail_data.get("learning_resources", []),
-            practice_exercises=detail_data.get("practice_exercises", []),
-            assessment_methods=detail_data.get("assessment_methods", ""),
-            advanced_topics=detail_data.get("advanced_topics", []),
-            connections=detail_data.get("connections", {})
+            information_sources=detail_data.get("information_sources", []),
+            practical_applications=detail_data.get("practical_applications", []),
+            verification_methods=detail_data.get("verification_methods", ""),
+            advanced_exploration=detail_data.get("advanced_exploration", []),
+            relationships=detail_data.get("relationships", {})
         )
         
         # Print confirmation of generated content
-        print(f"Successfully generated detailed content for step: {input_data.step_title}")
-        print(f"Contains {len(detailed_step.learning_objectives)} learning objectives and {len(detailed_step.subtopics)} subtopics")
+        print(f"Successfully generated detailed content for section: {input_data.section_title}")
+        print(f"Contains {len(detailed_section.key_points)} key points and {len(detailed_section.subtopics)} subtopics")
         
-        return detailed_step
+        return detailed_section
     
     except Exception as e:
-        print(f"Error generating step detail: {e}\n{traceback.format_exc()}")
+        print(f"Error generating section detail: {e}\n{traceback.format_exc()}")
         
         # Create a minimal fallback response
-        return DetailedStep(
-            step_title=input_data.step_title,
+        return DetailedSection(
+            section_title=input_data.section_title,
             estimated_time=input_data.estimated_time,
-            learning_objectives=["Understand key concepts", "Apply basic techniques", "Develop fundamental skills"],
-            subtopics=["Introduction", "Key Concepts", "Practical Applications"],  # Added default subtopics
+            key_points=["Understand key concepts", "Apply knowledge", "Develop critical thinking skills"],
+            subtopics=["Introduction", "Primary Concepts", "Practical Applications"],
             core_concepts="Content generation failed. Please try again.",
-            learning_resources=[],
-            practice_exercises=[],
-            assessment_methods="Standard quizzes and assignments to evaluate understanding.",
-            advanced_topics=["Further study in this area"],
-            connections={"previous": "Builds on foundational knowledge", "next": "Prepares for advanced topics"}
+            information_sources=[],
+            practical_applications=[],
+            verification_methods="Standard research validation methods and critical analysis.",
+            advanced_exploration=["Further research in this area"],
+            relationships={"prerequisite": "Foundational knowledge", "related": "Connected topics"}
         )
 
-def format_detailed_step_text(detailed_step: DetailedStep) -> str:
+def format_detailed_section_text(detailed_section: DetailedSection) -> str:
     """
-    Format the detailed step as human-readable markdown text
+    Format the detailed section as human-readable markdown text
     
     Args:
-        detailed_step: The detailed curriculum step object
+        detailed_section: The detailed knowledge section object
         
     Returns:
-        str: Formatted text representation of the detailed step
+        str: Formatted text representation of the detailed section
     """
-    text = f"# {detailed_step.step_title}\n\n"
-    text += f"**Estimated Time:** {detailed_step.estimated_time}\n\n"
+    text = f"# {detailed_section.section_title}\n\n"
+    text += f"**Estimated Time to Comprehend:** {detailed_section.estimated_time}\n\n"
     
-    # Learning Objectives
-    text += "## Learning Objectives\n\n"
-    for i, objective in enumerate(detailed_step.learning_objectives, 1):
-        text += f"{i}. {objective}\n"
+    # Key Points
+    text += "## Key Points\n\n"
+    for i, point in enumerate(detailed_section.key_points, 1):
+        text += f"{i}. {point}\n"
     text += "\n"
     
-    # Subtopics - new section
+    # Subtopics
     text += "## Subtopics\n\n"
-    for i, subtopic in enumerate(detailed_step.subtopics, 1):
+    for i, subtopic in enumerate(detailed_section.subtopics, 1):
         text += f"- {subtopic}\n"
     text += "\n"
     
     # Core Concepts
     text += "## Overview of Core Concepts\n\n"
-    text += f"{detailed_step.core_concepts}\n\n"
+    text += f"{detailed_section.core_concepts}\n\n"
     
-    # Learning Resources
-    text += "## Learning Resources\n\n"
-    for i, resource in enumerate(detailed_step.learning_resources, 1):
-        resource_type = resource.get("type", "")
-        type_label = f" ({resource_type})" if resource_type else ""
-        text += f"{i}. [{resource.get('title', 'Resource')}]({resource.get('url', '#')}){type_label}\n"
-        text += f"   {resource.get('description', '')}\n\n"
+    # Information Sources
+    text += "## Information Sources\n\n"
+    for i, source in enumerate(detailed_section.information_sources, 1):
+        source_type = source.get("type", "")
+        type_label = f" ({source_type})" if source_type else ""
+        text += f"{i}. [{source.get('title', 'Source')}]({source.get('url', '#')}){type_label}\n"
+        text += f"   {source.get('description', '')}\n\n"
     
-    # Practice Exercises
-    text += "## Practice Exercises\n\n"
-    for i, exercise in enumerate(detailed_step.practice_exercises, 1):
-        difficulty = exercise.get("difficulty", "")
-        difficulty_label = f" (Difficulty: {difficulty})" if difficulty else ""
-        text += f"### Exercise {i}: {exercise.get('title', '')}{difficulty_label}\n\n"
-        text += f"{exercise.get('description', '')}\n\n"
+    # Practical Applications
+    text += "## Practical Applications\n\n"
+    for i, application in enumerate(detailed_section.practical_applications, 1):
+        context = application.get("context", "")
+        context_label = f" (Context: {context})" if context else ""
+        text += f"### Application {i}: {application.get('title', '')}{context_label}\n\n"
+        text += f"{application.get('description', '')}\n\n"
     
-    # Assessment Methods
-    text += "## Assessment Methods\n\n"
-    text += f"{detailed_step.assessment_methods}\n\n"
+    # Verification Methods
+    text += "## Verification Methods\n\n"
+    text += f"{detailed_section.verification_methods}\n\n"
     
-    # Advanced Topics
+    # Advanced Exploration
     text += "## Advanced Topics for Further Exploration\n\n"
-    for topic in detailed_step.advanced_topics:
+    for topic in detailed_section.advanced_exploration:
         text += f"- {topic}\n"
     text += "\n"
     
-    # Connections
-    text += "## Connections to Other Steps\n\n"
-    text += f"**Building From:** {detailed_step.connections.get('previous', 'Foundation knowledge')}\n\n"
-    text += f"**Leading To:** {detailed_step.connections.get('next', 'Advanced topics')}\n\n"
+    # Relationships
+    text += "## Relationships to Other Knowledge Areas\n\n"
+    text += f"**Prerequisites:** {detailed_section.relationships.get('prerequisite', 'None')}\n\n"
+    text += f"**Related Areas:** {detailed_section.relationships.get('related', 'None')}\n\n"
     
     return text
 
 if __name__ == "__main__":
     # Example usage for testing
-    test_input = StepDetailInput(
-        step_title="Introduction to Python Variables and Data Types",
-        estimated_time="2 weeks",
-        subject="Programming"
+    test_input = SectionDetailInput(
+        section_title="Quantum Computing Fundamentals",
+        estimated_time="3 days",
+        topic="Quantum Computing"
     )
     
-    result = generate_step_detail(test_input)
-    formatted_text = format_detailed_step_text(result)
+    result = generate_section_detail(test_input)
+    formatted_text = format_detailed_section_text(result)
     
-    print("DETAILED STEP GENERATION COMPLETE")
+    print("DETAILED SECTION GENERATION COMPLETE")
     print(formatted_text)

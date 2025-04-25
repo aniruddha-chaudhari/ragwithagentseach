@@ -38,7 +38,7 @@ from langchain_pinecone import PineconeVectorStore
 from search import google_search
 
 # Import document processing functions using direct imports
-from document_loader import prepare_document, process_pdf, process_web, process_image
+from document_loader import prepare_document, process_csv, process_pdf, process_web, process_image
 
 # Import agents using direct imports
 from agents.writeragents import get_query_rewriter_agent, get_rag_agent, test_url_detector, generate_session_title, get_baseline_agent
@@ -86,6 +86,26 @@ from curriculum_service import (
     get_all_curriculums,
     create_curriculum,
     delete_curriculum_by_id
+)
+
+# Import knowledge service
+from knowledge_service import (
+    KnowledgeRequest,
+    KnowledgeModificationRequest,
+    KnowledgeResponse,
+    SectionDetailResponse,
+    KnowledgeMapResponse,
+    KnowledgeListResponse,
+    KnowledgeCreateRequest,
+    generate_knowledge,
+    get_knowledge,
+    modify_knowledge_by_id,
+    generate_section_details,
+    get_section_detail,
+    generate_knowledge_map,
+    get_all_knowledge_researches,
+    create_knowledge,
+    delete_knowledge_by_id
 )
 
 # Load environment variables
@@ -360,7 +380,7 @@ async def process_document(
         
         # Check file type based on extension
         file_ext = os.path.splitext(file_name)[1].lower()
-        allowed_extensions = ['.pdf', '.png', '.jpg', '.jpeg', '.gif', '.webp']
+        allowed_extensions = ['.pdf', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.csv']
         
         if file_ext not in allowed_extensions:
             raise HTTPException(
@@ -378,6 +398,9 @@ async def process_document(
             if file_ext in ['.png', '.jpg', '.jpeg', '.gif', '.webp']:
                 texts = process_image(temp_path)
                 doc_type = "Image"
+            elif file_ext in ['.csv', '.xlsx', '.xls']:
+                texts = process_csv(temp_path)
+                doc_type = "CSV"
             else:  # PDF or other document types
                 texts = process_pdf(temp_path)
                 doc_type = "Document"
@@ -679,9 +702,18 @@ Rewritten Question: {rewritten_query}
         history.append({"role": "assistant", "content": response.content})
         session_data["history"] = history
         
-        # Generate and save session title if not set
-        if session_data.get("session_name") == "Untitled Session":
-            session_data["session_name"] = generate_session_title(prompt)
+        # Generate and save session title if not set or is default
+        session_name = session_data.get("session_name", "Untitled Session")
+        if (session_name == "Untitled Session" or not session_name) and prompt:
+            try:
+                session_title = generate_session_title(prompt)
+                # Ensure we never return an empty title
+                if session_title and session_title.strip() != "":
+                    session_name = session_title
+                    session_data["session_name"] = session_name
+            except Exception as e:
+                print(f"Error generating session title: {str(e)}")
+                # Keep default title if generation fails
         
         # Save session data
         save_session(session_id, session_data)
@@ -715,7 +747,8 @@ Rewritten Question: {rewritten_query}
             "content": response.content, 
             "sources": sources, 
             "session_id": session_id,
-            "baseline_response": baseline_response  # Add the baseline response to the API response
+            "session_name": session_data.get("session_name", "Untitled Session"),  # Add session_name to response
+            "baseline_response": baseline_response
         }
         
     except Exception as e:
@@ -816,6 +849,101 @@ async def retrieve_step_detail(curriculum_id: str, step_index: int):
         if "not found" in str(e):
             raise HTTPException(status_code=404, detail=str(e))  # Fixed syntax: changed detail[ to detail=
         raise HTTPException(status_code=500, detail=f"Error retrieving step detail: {str(e)}")  # Fixed syntax: changed detail[ to detail=
+
+# KNOWLEDGE RESEARCH API ENDPOINTS
+@app.get("/knowledge", response_model=KnowledgeListResponse, dependencies=[Depends(get_api_key)])
+async def list_knowledge_research():
+    """Get a list of all available knowledge research"""
+    try:
+        result = get_all_knowledge_researches()
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error listing knowledge research: {str(e)}")
+
+@app.post("/knowledge", response_model=KnowledgeResponse, dependencies=[Depends(get_api_key)])
+async def create_knowledge_research(request: KnowledgeRequest):
+    """Generate a new knowledge research based on topic, source URL, and depth level"""
+    try:
+        result = generate_knowledge(request)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating knowledge research: {str(e)}")
+
+@app.post("/knowledge/new", dependencies=[Depends(get_api_key)])
+async def create_empty_knowledge(request: KnowledgeCreateRequest):
+    """Create a new empty knowledge research"""
+    try:
+        result = create_knowledge(request)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating knowledge research: {str(e)}")
+
+@app.get("/knowledge/{research_id}", response_model=KnowledgeResponse, dependencies=[Depends(get_api_key)])
+async def get_knowledge_by_id(research_id: str):
+    """Get a specific knowledge research by ID"""
+    try:
+        result = get_knowledge(research_id)
+        return result
+    except Exception as e:
+        if "not found" in str(e):
+            raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error retrieving knowledge research: {str(e)}")
+
+@app.put("/knowledge/{research_id}", response_model=KnowledgeResponse, dependencies=[Depends(get_api_key)])
+async def update_knowledge(research_id: str, request: KnowledgeModificationRequest):
+    """Modify a knowledge research based on the modification request"""
+    try:
+        result = modify_knowledge_by_id(research_id, request)
+        return result
+    except Exception as e:
+        if "not found" in str(e):
+            raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error modifying knowledge research: {str(e)}")
+
+@app.delete("/knowledge/{research_id}", dependencies=[Depends(get_api_key)])
+async def delete_knowledge_research(research_id: str):
+    """Delete a specific knowledge research"""
+    try:
+        success = delete_knowledge_by_id(research_id)
+        return {"success": success, "message": f"Knowledge research {research_id} deleted"}
+    except Exception as e:
+        if "not found" in str(e):
+            raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error deleting knowledge research: {str(e)}")
+
+@app.post("/knowledge/{research_id}/details", response_model=Dict[str, SectionDetailResponse], dependencies=[Depends(get_api_key)])
+async def create_section_details(research_id: str):
+    """Generate detailed content for all sections in a knowledge research"""
+    try:
+        result = generate_section_details(research_id)
+        # Convert integer keys to strings for JSON serialization
+        return {str(k): v for k, v in result.items()}
+    except Exception as e:
+        if "not found" in str(e):
+            raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error generating section details: {str(e)}")
+
+@app.get("/knowledge/{research_id}/details/{section_index}", response_model=SectionDetailResponse, dependencies=[Depends(get_api_key)])
+async def retrieve_section_detail(research_id: str, section_index: int):
+    """Get detailed content for a specific section"""
+    try:
+        result = get_section_detail(research_id, section_index)
+        return result
+    except Exception as e:
+        if "not found" in str(e):
+            raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error retrieving section detail: {str(e)}")
+
+@app.get("/knowledge/{research_id}/map", response_model=KnowledgeMapResponse, dependencies=[Depends(get_api_key)])
+async def get_knowledge_map(research_id: str):
+    """Generate a visual map for the knowledge research"""
+    try:
+        result = generate_knowledge_map(research_id)
+        return result
+    except Exception as e:
+        if "not found" in str(e):
+            raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error generating knowledge map: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
